@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launch_background">#2E2F34</color>
+    <!-- Splash Screen & Adaptive Icon Dark Mode Colors -->
+    <color name="splash_background">#2E2F34</color>
+    <color name="ic_launcher_bg">#2E2F34</color>
+    <color name="ic_launcher_fg">#FFFFFFFF</color>
+    <color name="splash_icon_color">#FFFFFFFF</color>
+</resources>

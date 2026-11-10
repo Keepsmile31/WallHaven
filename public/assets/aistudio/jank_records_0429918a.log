@@ -1,0 +1,1216 @@
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:24.277
+SCREEN: Settings
+DURATION: 149ms (approx 8 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:24.712
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:24.762
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:24.837
+SCREEN: Explore
+DURATION: 74ms (approx 4 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:24.944
+SCREEN: Explore
+DURATION: 107ms (approx 6 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:26.521
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:26.564
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:26.601
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:26.651
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:26.694
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.154
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.191
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.235
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.299
+SCREEN: Explore
+DURATION: 58ms (approx 3 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.377
+SCREEN: Explore
+DURATION: 83ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.492
+SCREEN: Explore
+DURATION: 116ms (approx 6 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.761
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.796
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.839
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.887
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.926
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:27.959
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.198
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.278
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.307
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.341
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.379
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.425
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.512
+SCREEN: Explore
+DURATION: 83ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.605
+SCREEN: Explore
+DURATION: 99ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:28.723
+SCREEN: Explore
+DURATION: 116ms (approx 6 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.095
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.138
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.176
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.204
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.235
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.289
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.324
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.376
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.429
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.829
+SCREEN: Explore
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.883
+SCREEN: Explore
+DURATION: 58ms (approx 3 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:29.971
+SCREEN: Explore
+DURATION: 83ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:30.103
+SCREEN: Explore
+DURATION: 132ms (approx 7 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:30.285
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:31.935
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:32.324
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.057
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.089
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.147
+SCREEN: Explore
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.203
+SCREEN: Explore
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.293
+SCREEN: Explore
+DURATION: 91ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.390
+SCREEN: Explore
+DURATION: 99ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:33.488
+SCREEN: Explore
+DURATION: 99ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:34.719
+SCREEN: History
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:35.598
+SCREEN: History
+DURATION: 107ms (approx 6 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:36.686
+SCREEN: Favorites
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:36.732
+SCREEN: Favorites
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:36.805
+SCREEN: Favorites
+DURATION: 74ms (approx 4 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:36.893
+SCREEN: Favorites
+DURATION: 91ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:37.690
+SCREEN: Favorites
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:38.670
+SCREEN: Favorites
+DURATION: 74ms (approx 4 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:43.533
+SCREEN: Settings
+DURATION: 91ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:44.944
+SCREEN: Explore
+DURATION: 99ms (approx 5 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:45.699
+SCREEN: Favorites
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:45.753
+SCREEN: Favorites
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:45.801
+SCREEN: Favorites
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:45.841
+SCREEN: Favorites
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:47.307
+SCREEN: Favorites
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:47.357
+SCREEN: Favorites
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:48.437
+SCREEN: Favorites
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:48.490
+SCREEN: Favorites
+DURATION: 49ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:49.806
+SCREEN: Favorites
+DURATION: 33ms (approx 1 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:49.898
+SCREEN: Favorites
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:51.302
+SCREEN: Favorites
+DURATION: 66ms (approx 3 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+
+--------------------------------------------------
+TIMESTAMP: 2026-11-03 17:09:53.753
+SCREEN: Settings
+DURATION: 41ms (approx 2 frames dropped)
+MAIN THREAD STACK TRACE:
+    at dalvik.system.VMStack.getThreadStackTrace(Native Method)
+    at java.lang.Thread.getStackTrace(Thread.java:1960)
+    at android.os.Handler.handleCallback(Handler.java:1027)
+    at android.os.Handler.dispatchMessage(Handler.java:108)
+    at android.os.Looper.loopOnce(Looper.java:302)
+    at android.os.Looper.loop(Looper.java:412)
+    at android.app.ActivityThread.main(ActivityThread.java:9992)
+    at java.lang.reflect.Method.invoke(Native Method)
+    at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:613)
+    at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1074)
+

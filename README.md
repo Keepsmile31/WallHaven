@@ -1,0 +1,3 @@
+WallHaven.cc是一个世界顶级的免费高清壁纸网站，由于其仅有网页版，使得手机用户访问体验不佳，于是乎第三方WallHaven手机版应运而生。
+
+WallHaven客户端并非官方所为，但其内容完全依托于WallHaven.cc开放API接口，客户端并未对WallHaven.cc壁纸图片做任何的压缩、剪切和改动，壁纸图片的一切操作权利还是归WallHaven.cc所有，请勿恶意滥用！

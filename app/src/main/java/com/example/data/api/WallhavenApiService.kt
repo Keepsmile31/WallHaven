@@ -2,6 +2,8 @@ package com.example.data.api
 
 import com.example.data.model.SearchResponse
 import com.example.data.model.WallpaperDetailResponse
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -39,19 +41,35 @@ interface WallhavenApiService {
 object ApiClient {
     private const val BASE_URL = "https://wallhaven.cc/"
 
-    val okHttpClient: OkHttpClient by lazy {
+    val baseOkHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectionPool(okhttp3.ConnectionPool(8, 5, TimeUnit.MINUTES))
+            .dispatcher(Dispatcher().apply {
+                maxRequests = 64
+                maxRequestsPerHost = 24
+            })
+            .connectionPool(ConnectionPool(16, 5, TimeUnit.MINUTES))
             .retryOnConnectionFailure(true)
+            .followRedirects(true)
+            .followSslRedirects(true)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .header("User-Agent", "Wallhaven-Android/1.0.0 (Arm64-v8a)")
-                    .header("Accept", "application/json")
                     .build()
                 chain.proceed(request)
             }
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
+            .build()
+    }
+
+    val okHttpClient: OkHttpClient by lazy {
+        baseOkHttpClient.newBuilder()
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("Accept", "application/json")
+                    .build()
+                chain.proceed(request)
+            }
             .build()
     }
 

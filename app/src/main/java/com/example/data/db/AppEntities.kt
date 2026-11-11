@@ -1,11 +1,13 @@
 package com.example.data.db
 
+import androidx.compose.runtime.Immutable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.data.model.ThumbsDto
 import com.example.data.model.WallpaperDto
 import com.squareup.moshi.JsonClass
 
+@Immutable
 @JsonClass(generateAdapter = true)
 @Entity(tableName = "favorites")
 data class FavoriteWallpaperEntity(
@@ -74,6 +76,7 @@ data class FavoriteWallpaperEntity(
     }
 }
 
+@Immutable
 @JsonClass(generateAdapter = true)
 @Entity(tableName = "browse_history")
 data class HistoryEntity(
@@ -87,6 +90,7 @@ data class HistoryEntity(
     val viewedAt: Long = System.currentTimeMillis()
 )
 
+@Immutable
 @JsonClass(generateAdapter = true)
 @Entity(tableName = "download_history")
 data class DownloadEntity(

@@ -1,6 +1,7 @@
 package com.example.data.preferences
 
 import android.content.Context
+import androidx.compose.runtime.Immutable
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -19,6 +20,7 @@ enum class FilterMode {
     TAB_INDEPENDENT
 }
 
+@Immutable
 data class AppSettings(
     val dynamicColor: Boolean = true,
     val darkMode: String = "system", // "system", "light", "dark"
@@ -28,7 +30,6 @@ data class AppSettings(
     val hapticFeedback: Boolean = true,
     val categories: String = "111", // General + Anime + People (all selected by default)
     val purity: String = "110",    // SFW + Sketchy default (NSFW when API key entered)
-    val defaultSorting: String = "toplist",
     val apiKey: String = "",
     val webDavUrl: String = "",
     val webDavUsername: String = "",
@@ -37,9 +38,8 @@ data class AppSettings(
     val webDavAutoBackup: Boolean = false,
     val webDavLastBackupTime: Long = 0L,
     val webDavLastStatus: String = "",
-    val layoutWidthMode: String = "system", // "system" or "custom"
-    val customLayoutWidthDp: Int = 720,
     val hideNavOnScroll: Boolean = false,
+    val useFloatingCapsuleNav: Boolean = true,
     val downloadDirectory: String = "/storage/emulated/0/Download/WallHaven",
     val concurrentDownloads: Int = 3,
     val showFavoritesCount: Boolean = true,
@@ -47,7 +47,8 @@ data class AppSettings(
     val tagLocalization: Boolean = false,
     val disclaimerAccepted: Boolean = false,
     val autoClearCacheMode: String = "none", // "none", "every_3_days", "on_exit"
-    val lastCacheClearTime: Long = 0L
+    val lastCacheClearTime: Long = 0L,
+    val liquidGlassMode: String = "ultimate" // "none", "standard", "ultimate"
 )
 
 class UserPreferencesManager(private val context: Context) {
@@ -61,7 +62,6 @@ class UserPreferencesManager(private val context: Context) {
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
         val CATEGORIES = stringPreferencesKey("categories")
         val PURITY = stringPreferencesKey("purity")
-        val DEFAULT_SORTING = stringPreferencesKey("default_sorting")
         val API_KEY = stringPreferencesKey("api_key")
         val WEBDAV_URL = stringPreferencesKey("webdav_url")
         val WEBDAV_USERNAME = stringPreferencesKey("webdav_username")
@@ -70,9 +70,8 @@ class UserPreferencesManager(private val context: Context) {
         val WEBDAV_AUTO_BACKUP = booleanPreferencesKey("webdav_auto_backup")
         val WEBDAV_LAST_BACKUP_TIME = longPreferencesKey("webdav_last_backup_time")
         val WEBDAV_LAST_STATUS = stringPreferencesKey("webdav_last_status")
-        val LAYOUT_WIDTH_MODE = stringPreferencesKey("layout_width_mode")
-        val CUSTOM_LAYOUT_WIDTH_DP = androidx.datastore.preferences.core.intPreferencesKey("custom_layout_width_dp")
         val HIDE_NAV_ON_SCROLL = booleanPreferencesKey("hide_nav_on_scroll")
+        val USE_FLOATING_CAPSULE_NAV = booleanPreferencesKey("use_floating_capsule_nav")
         val DOWNLOAD_DIRECTORY = stringPreferencesKey("download_directory")
         val CONCURRENT_DOWNLOADS = androidx.datastore.preferences.core.intPreferencesKey("concurrent_downloads")
         val SHOW_FAVORITES_COUNT = booleanPreferencesKey("show_favorites_count")
@@ -81,6 +80,7 @@ class UserPreferencesManager(private val context: Context) {
         val DISCLAIMER_ACCEPTED = booleanPreferencesKey("disclaimer_accepted")
         val AUTO_CLEAR_CACHE_MODE = stringPreferencesKey("auto_clear_cache_mode")
         val LAST_CACHE_CLEAR_TIME = longPreferencesKey("last_cache_clear_time")
+        val LIQUID_GLASS_MODE = stringPreferencesKey("liquid_glass_mode")
     }
 
     val settingsFlow: Flow<AppSettings> = context.dataStore.data.map { prefs ->
@@ -113,7 +113,6 @@ class UserPreferencesManager(private val context: Context) {
             hapticFeedback = prefs[PreferencesKeys.HAPTIC_FEEDBACK] ?: true,
             categories = prefs[PreferencesKeys.CATEGORIES] ?: "111",
             purity = effectivePurity,
-            defaultSorting = prefs[PreferencesKeys.DEFAULT_SORTING] ?: "toplist",
             apiKey = currentApiKey,
             webDavUrl = prefs[PreferencesKeys.WEBDAV_URL] ?: "",
             webDavUsername = prefs[PreferencesKeys.WEBDAV_USERNAME] ?: "",
@@ -122,9 +121,8 @@ class UserPreferencesManager(private val context: Context) {
             webDavAutoBackup = prefs[PreferencesKeys.WEBDAV_AUTO_BACKUP] ?: false,
             webDavLastBackupTime = prefs[PreferencesKeys.WEBDAV_LAST_BACKUP_TIME] ?: 0L,
             webDavLastStatus = prefs[PreferencesKeys.WEBDAV_LAST_STATUS] ?: "",
-            layoutWidthMode = prefs[PreferencesKeys.LAYOUT_WIDTH_MODE] ?: "system",
-            customLayoutWidthDp = prefs[PreferencesKeys.CUSTOM_LAYOUT_WIDTH_DP] ?: 720,
             hideNavOnScroll = prefs[PreferencesKeys.HIDE_NAV_ON_SCROLL] ?: false,
+            useFloatingCapsuleNav = prefs[PreferencesKeys.USE_FLOATING_CAPSULE_NAV] ?: true,
             downloadDirectory = prefs[PreferencesKeys.DOWNLOAD_DIRECTORY] ?: "/storage/emulated/0/Download/WallHaven",
             concurrentDownloads = prefs[PreferencesKeys.CONCURRENT_DOWNLOADS] ?: 3,
             showFavoritesCount = prefs[PreferencesKeys.SHOW_FAVORITES_COUNT] ?: true,
@@ -132,7 +130,11 @@ class UserPreferencesManager(private val context: Context) {
             tagLocalization = prefs[PreferencesKeys.TAG_LOCALIZATION] ?: false,
             disclaimerAccepted = prefs[PreferencesKeys.DISCLAIMER_ACCEPTED] ?: false,
             autoClearCacheMode = prefs[PreferencesKeys.AUTO_CLEAR_CACHE_MODE] ?: "none",
-            lastCacheClearTime = prefs[PreferencesKeys.LAST_CACHE_CLEAR_TIME] ?: 0L
+            lastCacheClearTime = prefs[PreferencesKeys.LAST_CACHE_CLEAR_TIME] ?: 0L,
+            liquidGlassMode = when (prefs[PreferencesKeys.LIQUID_GLASS_MODE]) {
+                "none", "standard", "ultimate" -> prefs[PreferencesKeys.LIQUID_GLASS_MODE]!!
+                else -> "ultimate"
+            }
         )
     }
 
@@ -174,10 +176,6 @@ class UserPreferencesManager(private val context: Context) {
         context.dataStore.edit { it[PreferencesKeys.PURITY] = purity }
     }
 
-    suspend fun setDefaultSorting(sorting: String) {
-        context.dataStore.edit { it[PreferencesKeys.DEFAULT_SORTING] = sorting }
-    }
-
     suspend fun setApiKey(key: String) {
         context.dataStore.edit { it[PreferencesKeys.API_KEY] = key.trim() }
     }
@@ -211,16 +209,12 @@ class UserPreferencesManager(private val context: Context) {
         }
     }
 
-    suspend fun setLayoutWidthMode(mode: String) {
-        context.dataStore.edit { it[PreferencesKeys.LAYOUT_WIDTH_MODE] = mode }
-    }
-
-    suspend fun setCustomLayoutWidthDp(widthDp: Int) {
-        context.dataStore.edit { it[PreferencesKeys.CUSTOM_LAYOUT_WIDTH_DP] = widthDp }
-    }
-
     suspend fun setHideNavOnScroll(enabled: Boolean) {
         context.dataStore.edit { it[PreferencesKeys.HIDE_NAV_ON_SCROLL] = enabled }
+    }
+
+    suspend fun setUseFloatingCapsuleNav(enabled: Boolean) {
+        context.dataStore.edit { it[PreferencesKeys.USE_FLOATING_CAPSULE_NAV] = enabled }
     }
 
     suspend fun setDownloadDirectory(directory: String) {
@@ -249,5 +243,10 @@ class UserPreferencesManager(private val context: Context) {
 
     suspend fun setLastCacheClearTime(timestamp: Long) {
         context.dataStore.edit { it[PreferencesKeys.LAST_CACHE_CLEAR_TIME] = timestamp }
+    }
+
+    suspend fun setLiquidGlassMode(mode: String) {
+        val normalized = if (mode in listOf("none", "standard", "ultimate")) mode else "ultimate"
+        context.dataStore.edit { it[PreferencesKeys.LIQUID_GLASS_MODE] = normalized }
     }
 }

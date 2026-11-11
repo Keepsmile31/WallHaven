@@ -33,9 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
@@ -66,10 +64,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -163,7 +163,7 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.size(15.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(stringResource(R.string.channel_123pan), fontSize = 12.sp)
                     }
@@ -228,7 +228,7 @@ fun SearchScreen(
             // Active search filter chips
             val hasActiveFilters = filterState.hasActiveFilters(isSearch = true) || selectedColor.isNotBlank()
             if (hasActiveFilters) {
-                item(span = StaggeredGridItemSpan.FullLine) {
+                item(span = StaggeredGridItemSpan.FullLine, contentType = "filter_chips") {
                     ActiveSearchChipsRow(
                         filterState = filterState,
                         selectedColor = selectedColor,
@@ -240,7 +240,8 @@ fun SearchScreen(
             // Results
             items(
                 items = wallpapers,
-                key = { it.id }
+                key = { it.id },
+                contentType = { "wallpaper" }
             ) { wp ->
                 WallpaperCard(
                     wallpaper = wp,
@@ -253,7 +254,7 @@ fun SearchScreen(
 
             // Loading more spinner
             if (isLoading && wallpapers.isNotEmpty()) {
-                item(span = StaggeredGridItemSpan.FullLine) {
+                item(span = StaggeredGridItemSpan.FullLine, contentType = "loading_spinner") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -270,7 +271,7 @@ fun SearchScreen(
 
             // Empty state matching Screenshot 2
             if (!isLoading && wallpapers.isEmpty()) {
-                item(span = StaggeredGridItemSpan.FullLine) {
+                item(span = StaggeredGridItemSpan.FullLine, contentType = "empty_state") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -481,7 +482,7 @@ fun SearchScreen(
                                 }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.FilterList,
+                                    imageVector = ImageVector.vectorResource(R.drawable.ic_filter_list),
                                     contentDescription = stringResource(R.string.action_filter),
                                     tint = if (hasFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(22.dp)

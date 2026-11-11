@@ -28,21 +28,16 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -59,17 +54,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.WallpaperDto
 import com.example.ui.components.AppHeaderBar
+import com.example.ui.components.ExploreLiquidGlassFilterButton
+import com.example.ui.components.ExploreLiquidGlassTabs
 import com.example.ui.components.FilterBottomSheet
 import com.example.ui.components.FilterState
 import com.example.ui.components.WallpaperCard
@@ -148,7 +150,7 @@ fun ExploreScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.size(15.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(stringResource(R.string.channel_123pan), fontSize = 12.sp)
                     }
@@ -193,27 +195,41 @@ fun ExploreScreen(
         )
     }
 
+    val backdropLayer = rememberGraphicsLayer()
+    val backdropBaseColor = MaterialTheme.colorScheme.background
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // Wallpaper 2-column staggered grid extending under status and nav bars
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
-            state = gridState,
-            contentPadding = PaddingValues(
-                start = 8.dp,
-                end = 8.dp,
-                top = topInset + 104.dp, // Space for 2-row top section
-                bottom = navBottomInset + 88.dp
-            ),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalItemSpacing = 8.dp,
+        // Wallpaper 2-column staggered grid recorded into backdropLayer for top Liquid Glass refraction
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .testTag("explore_wallpaper_grid")
+                .drawWithContent {
+                    backdropLayer.record {
+                        drawRect(color = backdropBaseColor)
+                        this@drawWithContent.drawContent()
+                    }
+                    drawLayer(backdropLayer)
+                }
         ) {
+            LazyVerticalStaggeredGrid(
+                columns = StaggeredGridCells.Fixed(2),
+                state = gridState,
+                contentPadding = PaddingValues(
+                    start = 8.dp,
+                    end = 8.dp,
+                    top = topInset + 108.dp, // Space for 2-row top section
+                    bottom = navBottomInset + 88.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalItemSpacing = 8.dp,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("explore_wallpaper_grid")
+            ) {
             // Active Filter Chips Bar
             val hasActive = filterState.hasActiveFilters(isTopTab = currentSubTab == 3)
             if (hasActive) {
-                item(span = StaggeredGridItemSpan.FullLine) {
+                item(span = StaggeredGridItemSpan.FullLine, contentType = "filter_chips") {
                     ActiveFilterChipsRow(
                         filterState = filterState,
                         isTopTab = currentSubTab == 3,
@@ -225,7 +241,8 @@ fun ExploreScreen(
             // Wallpapers
             items(
                 items = wallpapers,
-                key = { it.id }
+                key = { it.id },
+                contentType = { "wallpaper" }
             ) { wp ->
                 WallpaperCard(
                     wallpaper = wp,
@@ -238,7 +255,7 @@ fun ExploreScreen(
 
             // Loading more spinner
             if (isLoading && wallpapers.isNotEmpty()) {
-                item(span = StaggeredGridItemSpan.FullLine) {
+                item(span = StaggeredGridItemSpan.FullLine, contentType = "loading_spinner") {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -280,44 +297,52 @@ fun ExploreScreen(
             }
         }
 
-        // Error display with retry button
-        if (errorMessage != null && wallpapers.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = topInset + 104.dp, bottom = navBottomInset + 88.dp, start = 24.dp, end = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Error display with retry button
+            if (errorMessage != null && wallpapers.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = topInset + 108.dp, bottom = navBottomInset + 88.dp, start = 24.dp, end = 24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = errorMessage,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 14.sp
-                    )
-                    Button(onClick = onRetry) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.action_retry))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp
+                        )
+                        Button(onClick = onRetry) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(stringResource(R.string.action_retry))
+                        }
                     }
                 }
             }
         }
 
-        // Top Section Design matching Screenshot 4
-        Surface(
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
-            shadowElevation = 2.dp,
+        // Translucent Top Header with Liquid Glass Segmented Tabs & Circular Filter Orb
+        val headerFadeBrush = remember(backdropBaseColor) {
+            Brush.verticalGradient(
+                0.0f to backdropBaseColor.copy(alpha = 0.88f),
+                0.48f to backdropBaseColor.copy(alpha = 0.68f),
+                0.84f to backdropBaseColor.copy(alpha = 0.24f),
+                1.0f to Color.Transparent
+            )
+        }
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
+                .background(headerFadeBrush)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = topInset, bottom = 10.dp)
+                    .padding(top = topInset, bottom = 14.dp)
             ) {
                 // Row 1: Refined Header Bar with App Icon + Title
                 Row(
@@ -342,84 +367,35 @@ fun ExploreScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val tabs = listOf(
-                        0 to "最新",
-                        1 to "热门",
-                        2 to "随机",
-                        3 to "榜单"
+                    val tabs = remember {
+                        listOf(
+                            0 to "最新",
+                            1 to "热门",
+                            2 to "随机",
+                            3 to "榜单"
+                        )
+                    }
+
+                    ExploreLiquidGlassTabs(
+                        tabs = tabs,
+                        selectedIndex = currentSubTab,
+                        onSelect = { index ->
+                            hapticHelper.vibrateTick()
+                            onSelectSubTab(index)
+                        },
+                        backdropLayer = backdropLayer,
+                        modifier = Modifier.weight(1f)
                     )
 
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        tabs.forEach { (index, title) ->
-                            val isSelected = currentSubTab == index
-                            Surface(
-                                shape = RoundedCornerShape(50),
-                                color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(38.dp)
-                                    .clip(RoundedCornerShape(50))
-                                    .clickable {
-                                        hapticHelper.vibrateTick()
-                                        onSelectSubTab(index)
-                                    }
-                                    .testTag("explore_tab_$index")
-                            ) {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    Text(
-                                        text = title,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 13.sp,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Circular Filter Button on the right
-                    val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
                     val hasActiveFilters = filterState.hasActiveFilters(isTopTab = currentSubTab == 3)
-                    Surface(
-                        shape = CircleShape,
-                        color = if (isDarkTheme) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .clickable {
-                                hapticHelper.vibrateTick()
-                                showFilterSheet = true
-                            }
-                            .testTag("explore_filter_btn")
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                            BadgedBox(
-                                badge = {
-                                    if (hasActiveFilters) {
-                                        Badge(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(8.dp)
-                                        )
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.FilterList,
-                                    contentDescription = stringResource(R.string.action_filter),
-                                    tint = if (hasActiveFilters) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(19.dp)
-                                )
-                            }
+                    ExploreLiquidGlassFilterButton(
+                        hasActiveFilters = hasActiveFilters,
+                        backdropLayer = backdropLayer,
+                        onClick = {
+                            hapticHelper.vibrateTick()
+                            showFilterSheet = true
                         }
-                    }
+                    )
                 }
 
                 if (isLoading) {
@@ -429,7 +405,7 @@ fun ExploreScreen(
                             .padding(top = 8.dp)
                             .height(2.dp),
                         color = MaterialTheme.colorScheme.primary,
-                        trackColor = androidx.compose.ui.graphics.Color.Transparent
+                        trackColor = Color.Transparent
                     )
                 }
             }

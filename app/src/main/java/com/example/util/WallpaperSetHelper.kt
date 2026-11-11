@@ -20,15 +20,16 @@ class WallpaperSetHelper(private val context: Context) {
         withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder().url(url).build()
-                val response = ApiClient.okHttpClient.newCall(request).execute()
-                if (!response.isSuccessful) {
-                    return@withContext Result.failure(Exception("无法获取壁纸原图 HTTP ${response.code}"))
-                }
-                val inputStream = response.body?.byteStream()
-                    ?: return@withContext Result.failure(Exception("壁纸数据流为空"))
+                val bitmap = ApiClient.baseOkHttpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        return@withContext Result.failure(Exception("无法获取壁纸原图 HTTP ${response.code}"))
+                    }
+                    val inputStream = response.body?.byteStream()
+                        ?: return@withContext Result.failure(Exception("壁纸数据流为空"))
 
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                    ?: return@withContext Result.failure(Exception("无法解析壁纸图像"))
+                    BitmapFactory.decodeStream(inputStream)
+                        ?: return@withContext Result.failure(Exception("无法解析壁纸图像"))
+                }
 
                 val wallpaperManager = WallpaperManager.getInstance(context)
 

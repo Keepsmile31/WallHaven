@@ -44,6 +44,12 @@ interface HistoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllHistory(entities: List<HistoryEntity>)
 
+    @Query("DELETE FROM browse_history WHERE id = :id")
+    suspend fun deleteHistoryById(id: String)
+
+    @Query("DELETE FROM browse_history WHERE id IN (:ids)")
+    suspend fun deleteHistoryByIds(ids: List<String>)
+
     @Query("DELETE FROM browse_history")
     suspend fun clearAll()
 }
@@ -61,6 +67,12 @@ interface DownloadDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAllDownloads(entities: List<DownloadEntity>)
+
+    @Query("DELETE FROM download_history WHERE id = :id")
+    suspend fun deleteDownloadById(id: String)
+
+    @Query("DELETE FROM download_history WHERE id IN (:ids)")
+    suspend fun deleteDownloadsByIds(ids: List<String>)
 
     @Query("DELETE FROM download_history")
     suspend fun clearAll()

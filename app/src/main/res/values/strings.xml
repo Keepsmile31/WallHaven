@@ -57,10 +57,10 @@
     <string name="export_data_desc">导出设置、收藏、下载与浏览历史为 JSON 文件</string>
     <string name="import_data">导入数据</string>
     <string name="import_data_desc">从之前导出的备份文件恢复全部数据</string>
-    <string name="settings_api">WallHaven API 密钥</string>
     <string name="settings_api_desc">填入个人 API Key 可检索 Sketchy/NSFW 资源或私有收藏</string>
     <string name="settings_about">关于与帮助</string>
     <string name="about_wallhaven_entry">关于 WallHaven</string>
+    <string name="about_project_url">项目地址</string>
     <string name="about_developer_link">开发者主页 (酷安)</string>
     <string name="about_target_platform">目标平台：Compile SDK 37 (Android 17) · arm64-v8a</string>
     <string name="about_app_desc">由 Jetpack Compose 和 Material 3 构建，支持 Material You 动态取色、WebDAV 自动每日备份、原图无裁剪展示与下载。</string>
@@ -88,11 +88,16 @@
     <string name="batch_download">批量下载</string>
     <string name="batch_unfavorite">批量取消收藏</string>
     <string name="batch_selected_count">已选 %1$d 项</string>
+    <string name="history_delete_selected">删除所选</string>
+    <string name="history_clear_all">清空全部</string>
+    <string name="history_delete_item">删除此记录</string>
     <string name="filter_reset">重置筛选</string>
     <string name="filter_confirm">确认筛选</string>
     <string name="channel_123pan">获取 API 密钥 (123云盘)</string>
     <string name="settings_hide_nav_on_scroll">滚动时隐藏底部导航栏</string>
     <string name="settings_hide_nav_on_scroll_desc">向下滚动浏览内容时自动隐藏底部导航栏，腾出更大显示空间</string>
+    <string name="settings_floating_capsule_nav">悬浮组件</string>
+    <string name="settings_floating_capsule_nav_desc">使用底部悬浮胶囊组件导航栏，支持滑动切换，关闭后可切换回原版贴底导航栏</string>
     <string name="settings_theme_color">主题色彩</string>
     <string name="settings_color_style">配色风格</string>
     <string name="color_orange">经典橙</string>
@@ -108,4 +113,9 @@
     <string name="style_expressive">鲜明大胆</string>
     <string name="style_neutral">柔和素雅</string>
     <string name="style_high_contrast">高对比度</string>
+    <string name="settings_liquid_glass">液态玻璃</string>
+    <string name="settings_liquid_glass_desc">调整导航栏、顶部分段标签与开关控件的玻璃折射效果</string>
+    <string name="liquid_glass_none">无</string>
+    <string name="liquid_glass_standard">标准</string>
+    <string name="liquid_glass_ultimate">极致</string>
 </resources>

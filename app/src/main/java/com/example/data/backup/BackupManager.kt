@@ -26,13 +26,12 @@ data class BackupSettings(
     val hapticFeedback: Boolean = true,
     val categories: String = "110",
     val purity: String = "100",
-    val defaultSorting: String = "toplist",
     val apiKey: String = "",
-    val layoutWidthMode: String = "system",
-    val customLayoutWidthDp: Int = 720,
     val hideNavOnScroll: Boolean = false,
+    val useFloatingCapsuleNav: Boolean = true,
     val showFavoritesCount: Boolean = true,
-    val filterMode: String = "TAB_INDEPENDENT"
+    val filterMode: String = "TAB_INDEPENDENT",
+    val liquidGlassMode: String = "ultimate"
 )
 
 @JsonClass(generateAdapter = true)
@@ -79,13 +78,12 @@ class BackupManager(
                 hapticFeedback = currentSettings.hapticFeedback,
                 categories = currentSettings.categories,
                 purity = currentSettings.purity,
-                defaultSorting = currentSettings.defaultSorting,
                 apiKey = currentSettings.apiKey,
-                layoutWidthMode = currentSettings.layoutWidthMode,
-                customLayoutWidthDp = currentSettings.customLayoutWidthDp,
                 hideNavOnScroll = currentSettings.hideNavOnScroll,
+                useFloatingCapsuleNav = currentSettings.useFloatingCapsuleNav,
                 showFavoritesCount = currentSettings.showFavoritesCount,
-                filterMode = currentSettings.filterMode.name
+                filterMode = currentSettings.filterMode.name,
+                liquidGlassMode = currentSettings.liquidGlassMode
             ),
             favorites = favorites,
             browseHistory = history,
@@ -109,11 +107,10 @@ class BackupManager(
                 preferencesManager.setHapticFeedback(s.hapticFeedback)
                 preferencesManager.setCategories(s.categories)
                 preferencesManager.setPurity(s.purity)
-                preferencesManager.setDefaultSorting(s.defaultSorting)
-                preferencesManager.setLayoutWidthMode(s.layoutWidthMode)
-                preferencesManager.setCustomLayoutWidthDp(s.customLayoutWidthDp)
                 preferencesManager.setHideNavOnScroll(s.hideNavOnScroll)
+                preferencesManager.setUseFloatingCapsuleNav(s.useFloatingCapsuleNav)
                 preferencesManager.setShowFavoritesCount(s.showFavoritesCount)
+                preferencesManager.setLiquidGlassMode(s.liquidGlassMode)
                 try {
                     preferencesManager.setFilterMode(com.example.data.preferences.FilterMode.valueOf(s.filterMode))
                 } catch (_: Exception) {}

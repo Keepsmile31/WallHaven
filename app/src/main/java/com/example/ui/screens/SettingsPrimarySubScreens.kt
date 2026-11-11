@@ -24,22 +24,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CleanHands
-import androidx.compose.material.icons.filled.Contrast
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Translate
-import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -52,7 +38,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -66,9 +51,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -76,6 +63,7 @@ import com.example.R
 import com.example.data.preferences.AppSettings
 import com.example.data.preferences.FilterMode
 import com.example.data.preferences.UserPreferencesManager
+import com.example.ui.components.LiquidGlassSwitch
 import com.example.ui.theme.AvailableThemeColors
 import com.example.util.CacheManager
 import com.example.util.HapticHelper
@@ -90,6 +78,7 @@ internal fun SettingsAppearanceScreen(
 ) {
     val scope = rememberCoroutineScope()
     var showDarkModeDialog by remember { mutableStateOf(false) }
+    var showLiquidGlassDialog by remember { mutableStateOf(false) }
 
     SubPageScaffold(
         title = stringResource(R.string.settings_appearance),
@@ -102,12 +91,12 @@ internal fun SettingsAppearanceScreen(
                 scope.launch { preferencesManager.setDynamicColor(next) }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.Palette,
+                icon = ImageVector.vectorResource(R.drawable.ic_palette),
                 title = stringResource(R.string.settings_dynamic_color),
                 subtitle = stringResource(R.string.settings_dynamic_color_desc),
                 onClick = { toggleDynamic() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.dynamicColor,
                         onCheckedChange = {
                             hapticHelper.vibrateTick(settings.hapticFeedback)
@@ -232,7 +221,7 @@ internal fun SettingsAppearanceScreen(
                 else -> stringResource(R.string.dark_mode_follow_system)
             }
             M3SettingsItemRow(
-                icon = Icons.Default.DarkMode,
+                icon = ImageVector.vectorResource(R.drawable.ic_dark_mode),
                 title = stringResource(R.string.settings_dark_mode),
                 subtitle = currentDarkModeLabel,
                 testTag = "settings_dark_mode_row",
@@ -261,12 +250,12 @@ internal fun SettingsAppearanceScreen(
                 scope.launch { preferencesManager.setAmoledBlack(next) }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.Contrast,
+                icon = ImageVector.vectorResource(R.drawable.ic_contrast),
                 title = stringResource(R.string.settings_amoled),
                 subtitle = stringResource(R.string.settings_amoled_desc),
                 onClick = { toggleAmoled() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.amoledBlack,
                         onCheckedChange = {
                             hapticHelper.vibrateTick(settings.hapticFeedback)
@@ -285,12 +274,12 @@ internal fun SettingsAppearanceScreen(
                 scope.launch { preferencesManager.setHapticFeedback(next) }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.Vibration,
+                icon = ImageVector.vectorResource(R.drawable.ic_vibration),
                 title = stringResource(R.string.settings_haptic),
                 subtitle = stringResource(R.string.settings_haptic_desc),
                 onClick = { toggleHaptic() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.hapticFeedback,
                         onCheckedChange = {
                             hapticHelper.vibrateTick(it)
@@ -309,12 +298,12 @@ internal fun SettingsAppearanceScreen(
                 scope.launch { preferencesManager.setHideNavOnScroll(next) }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.VisibilityOff,
+                icon = ImageVector.vectorResource(R.drawable.ic_visibility_off),
                 title = stringResource(R.string.settings_hide_nav_on_scroll),
                 subtitle = stringResource(R.string.settings_hide_nav_on_scroll_desc),
                 onClick = { toggleHideNav() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.hideNavOnScroll,
                         onCheckedChange = {
                             hapticHelper.vibrateTick(settings.hapticFeedback)
@@ -322,6 +311,59 @@ internal fun SettingsAppearanceScreen(
                         },
                         modifier = Modifier.testTag("hide_nav_on_scroll_switch")
                     )
+                }
+            )
+
+            M3SettingsDivider()
+
+            val toggleFloatingCapsuleNav = {
+                val next = !settings.useFloatingCapsuleNav
+                hapticHelper.vibrateTick(settings.hapticFeedback)
+                scope.launch { preferencesManager.setUseFloatingCapsuleNav(next) }
+            }
+            M3SettingsItemRow(
+                icon = ImageVector.vectorResource(R.drawable.ic_rounded_corner),
+                title = stringResource(R.string.settings_floating_capsule_nav),
+                subtitle = stringResource(R.string.settings_floating_capsule_nav_desc),
+                onClick = { toggleFloatingCapsuleNav() },
+                trailingContent = {
+                    LiquidGlassSwitch(
+                        checked = settings.useFloatingCapsuleNav,
+                        onCheckedChange = {
+                            hapticHelper.vibrateTick(settings.hapticFeedback)
+                            scope.launch { preferencesManager.setUseFloatingCapsuleNav(it) }
+                        },
+                        modifier = Modifier.testTag("floating_capsule_nav_switch")
+                    )
+                }
+            )
+
+            M3SettingsDivider()
+
+            val currentLiquidGlassLabel = when (settings.liquidGlassMode) {
+                "none" -> stringResource(R.string.liquid_glass_none)
+                "standard" -> stringResource(R.string.liquid_glass_standard)
+                else -> stringResource(R.string.liquid_glass_ultimate)
+            }
+            M3SettingsItemRow(
+                icon = ImageVector.vectorResource(R.drawable.ic_water_drop_outlined),
+                title = stringResource(R.string.settings_liquid_glass),
+                subtitle = stringResource(R.string.settings_liquid_glass_desc),
+                testTag = "settings_liquid_glass_row",
+                onClick = { showLiquidGlassDialog = true },
+                trailingContent = {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.8f)
+                    ) {
+                        Text(
+                            text = currentLiquidGlassLabel,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
                 }
             )
 
@@ -338,7 +380,7 @@ internal fun SettingsAppearanceScreen(
                 subtitle = stringResource(R.string.settings_show_favorites_count_desc),
                 onClick = { toggleFavCount() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.showFavoritesCount,
                         onCheckedChange = {
                             hapticHelper.vibrateTick(settings.hapticFeedback)
@@ -362,6 +404,85 @@ internal fun SettingsAppearanceScreen(
             onDismiss = { showDarkModeDialog = false }
         )
     }
+
+    if (showLiquidGlassDialog) {
+        LiquidGlassModeDialog(
+            currentMode = settings.liquidGlassMode,
+            onSelectMode = { mode ->
+                hapticHelper.vibrateTick(settings.hapticFeedback)
+                scope.launch { preferencesManager.setLiquidGlassMode(mode) }
+                showLiquidGlassDialog = false
+            },
+            onDismiss = { showLiquidGlassDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun LiquidGlassModeDialog(
+    currentMode: String,
+    onSelectMode: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val modes = listOf(
+        Triple(
+            "none",
+            stringResource(R.string.liquid_glass_none),
+            "使用纯色不透明胶囊与常规开关，关闭模糊与玻璃折射效果"
+        ),
+        Triple(
+            "standard",
+            stringResource(R.string.liquid_glass_standard),
+            "启用柔和背景模糊与半透明质感，兼顾观感与性能流畅度"
+        ),
+        Triple(
+            "ultimate",
+            stringResource(R.string.liquid_glass_ultimate),
+            "开启物理边缘折射、彩虹色散高光与悬浮水滴透镜（默认）"
+        )
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_liquid_glass)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                modes.forEach { (modeKey, modeTitle, modeDesc) ->
+                    val isSelected = currentMode == modeKey
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .defaultMinSize(minHeight = 48.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onSelectMode(modeKey) }
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
+                            .testTag("liquid_glass_mode_$modeKey"),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = isSelected, onClick = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = modeTitle,
+                                fontSize = 15.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                            )
+                            Text(
+                                text = modeDesc,
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    )
 }
 
 @Composable
@@ -433,10 +554,10 @@ internal fun SettingsContentScreen(
         title = "内容与浏览",
         onBack = onBack
     ) {
-        M3SettingsSectionTitle(title = "身份与密钥", icon = Icons.Default.Key)
+        M3SettingsSectionTitle(title = "身份与密钥", icon = ImageVector.vectorResource(R.drawable.ic_key))
         M3SettingsCard {
             M3SettingsItemRow(
-                icon = Icons.Default.Key,
+                icon = ImageVector.vectorResource(R.drawable.ic_key),
                 title = "WallHaven API 密钥",
                 subtitle = if (settings.apiKey.isNotBlank()) {
                     "已配置 (••••••••${settings.apiKey.takeLast(4)})"
@@ -462,10 +583,10 @@ internal fun SettingsContentScreen(
             )
         }
 
-        M3SettingsSectionTitle(title = "过滤与展示偏好", icon = Icons.Default.FilterList)
+        M3SettingsSectionTitle(title = "过滤与展示偏好", icon = ImageVector.vectorResource(R.drawable.ic_filter_list))
         M3SettingsCard {
             M3SettingsItemRow(
-                icon = Icons.Default.FilterList,
+                icon = ImageVector.vectorResource(R.drawable.ic_filter_list),
                 title = "筛选条件模式",
                 subtitle = when (settings.filterMode) {
                     FilterMode.GLOBAL_SHARED -> "全局共享 (所有标签页共用同一组筛选规则)"
@@ -497,12 +618,12 @@ internal fun SettingsContentScreen(
                 scope.launch { preferencesManager.setTagLocalization(next) }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.Translate,
+                icon = ImageVector.vectorResource(R.drawable.ic_translate),
                 title = "标签本地化与搜索 (Beta)",
                 subtitle = "开启壁纸标签中文显示与中文搜索。*当前处于测试阶段，部分词汇可能未翻译或存在异常。",
                 onClick = { toggleLocalization() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.tagLocalization,
                         onCheckedChange = {
                             hapticHelper.vibrateTick(settings.hapticFeedback)
@@ -586,7 +707,7 @@ private fun ApiKeyDialog(
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new),
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -709,7 +830,7 @@ internal fun SettingsStorageScreen(
         title = stringResource(R.string.settings_storage),
         onBack = onBack
     ) {
-        M3SettingsSectionTitle(title = "缓存管理", icon = Icons.Default.CleanHands)
+        M3SettingsSectionTitle(title = "缓存管理", icon = ImageVector.vectorResource(R.drawable.ic_clean_hands))
         M3SettingsCard {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -775,7 +896,7 @@ internal fun SettingsStorageScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("正在清理缓存...")
                     } else {
-                        Icon(imageVector = Icons.Default.DeleteOutline, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_delete_outline), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("立即清理缓存")
                     }
@@ -837,7 +958,7 @@ internal fun SettingsStorageScreen(
             }
         }
 
-        M3SettingsSectionTitle(title = "下载保存目录", icon = Icons.Default.FolderOpen)
+        M3SettingsSectionTitle(title = "下载保存目录", icon = ImageVector.vectorResource(R.drawable.ic_folder_open))
         M3SettingsCard {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -863,7 +984,7 @@ internal fun SettingsStorageScreen(
                         onClick = { dirLauncher.launch(null) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Icon(imageVector = Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_folder), contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("自定义目录", fontSize = 12.sp)
                     }
@@ -883,7 +1004,7 @@ internal fun SettingsStorageScreen(
             }
         }
 
-        M3SettingsSectionTitle(title = "下载任务并发", icon = Icons.Default.Download)
+        M3SettingsSectionTitle(title = "下载任务并发", icon = ImageVector.vectorResource(R.drawable.ic_download))
         M3SettingsCard {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

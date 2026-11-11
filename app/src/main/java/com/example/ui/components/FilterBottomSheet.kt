@@ -12,14 +12,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -47,6 +45,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 
+@Immutable
 data class FilterState(
     val categories: String = "111",
     val purity: String = "110",
@@ -75,12 +75,6 @@ data class FilterState(
     val order: String = "desc",
     val color: String = ""
 ) {
-    val scene: String get() = scenes.joinToString(" ")
-    val ratio: String get() = ratios.joinToString(",")
-    val resolution: String get() = (if (atleast.isNotBlank()) listOf(">= $atleast") else emptyList())
-        .plus(resolutions)
-        .joinToString(",")
-
     fun hasActiveFilters(isTopTab: Boolean = false, isSearch: Boolean = false): Boolean {
         val defaultPurity = if (purity.length >= 3 && purity[2] == '1') "111" else "110"
         return scenes.isNotEmpty() ||
@@ -96,9 +90,10 @@ data class FilterState(
     }
 }
 
+@Immutable
 data class PrecomputedColor(val hex: String, val color: Color, val isLight: Boolean)
 
-val WallhavenColors = listOf(
+private val WallhavenColors = listOf(
     "660000", "990000", "cc0000", "cc3333", "ea4c88",
     "993399", "663399", "333399", "0066cc", "0099ff",
     "66cccc", "77cc33", "669900", "336600", "666600",
@@ -234,17 +229,14 @@ fun FilterBottomSheet(
         dragHandle = null,
         modifier = Modifier.testTag("filter_bottom_sheet")
     ) {
-        val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        val cutoutTop = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
         val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-        val topSafeMargin = maxOf(statusBarTop, cutoutTop, 52.dp) + 14.dp
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.92f)
                 .padding(
-                    top = topSafeMargin,
+                    top = 10.dp,
                     bottom = navBottom + 8.dp
                 )
         ) {
@@ -252,7 +244,7 @@ fun FilterBottomSheet(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 6.dp),
+                    .padding(bottom = 2.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -269,7 +261,7 @@ fun FilterBottomSheet(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 2.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {

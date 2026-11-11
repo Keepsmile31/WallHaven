@@ -54,9 +54,6 @@ class WallpaperRepository(
     fun getFavorites(): Flow<List<FavoriteWallpaperEntity>> =
         database.favoriteDao().getAllFavorites()
 
-    fun isFavorite(id: String): Flow<Boolean> =
-        database.favoriteDao().isFavorite(id)
-
     suspend fun toggleFavorite(wallpaper: WallpaperDto): Boolean {
         val currentlyFav = database.favoriteDao().isFavorite(wallpaper.id).first()
         if (currentlyFav) {
@@ -90,12 +87,34 @@ class WallpaperRepository(
     fun getHistory(): Flow<List<HistoryEntity>> =
         database.historyDao().getHistory()
 
+    suspend fun deleteHistoryItem(id: String) {
+        database.historyDao().deleteHistoryById(id)
+    }
+
+    suspend fun batchDeleteHistory(ids: List<String>) {
+        if (ids.isEmpty()) return
+        ids.chunked(500).forEach { chunk ->
+            database.historyDao().deleteHistoryByIds(chunk)
+        }
+    }
+
     suspend fun clearHistory() {
         database.historyDao().clearAll()
     }
 
     fun getDownloads(): Flow<List<DownloadEntity>> =
         database.downloadDao().getDownloads()
+
+    suspend fun deleteDownloadItem(id: String) {
+        database.downloadDao().deleteDownloadById(id)
+    }
+
+    suspend fun batchDeleteDownloads(ids: List<String>) {
+        if (ids.isEmpty()) return
+        ids.chunked(500).forEach { chunk ->
+            database.downloadDao().deleteDownloadsByIds(chunk)
+        }
+    }
 
     suspend fun clearDownloads() {
         database.downloadDao().clearAll()

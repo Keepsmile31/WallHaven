@@ -19,28 +19,25 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.BuildConfig
 import com.example.R
 import com.example.data.backup.BackupManager
 import com.example.data.preferences.AppSettings
 import com.example.data.preferences.UserPreferencesManager
+import com.example.ui.components.AppHeaderBar
 import com.example.util.HapticHelper
 
 private object SettingsRoutes {
@@ -186,42 +183,32 @@ private fun SettingsMainScreen(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(
-                top = topInset + 16.dp,
+                top = topInset + 6.dp,
                 bottom = navBottomInset + 88.dp,
                 start = 16.dp,
                 end = 16.dp
             ),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)) {
-            Text(
-                text = stringResource(R.string.nav_settings),
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "自定义外观交互、过滤规则与存储同步管理",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+        AppHeaderBar(
+            title = stringResource(R.string.nav_settings),
+            modifier = Modifier.padding(vertical = 6.dp)
+        )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         M3ModuleCard(
-            icon = Icons.Default.Palette,
+            icon = ImageVector.vectorResource(R.drawable.ic_palette),
             iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
             iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
             title = stringResource(R.string.settings_appearance),
-            subtitle = "动态取色、自定义主题配色、深色模式与手势动画",
+            subtitle = "动态取色、自定义主题配色、深色模式与液态玻璃",
             testTag = "settings_appearance_card",
             onClick = { onNavigate(SettingsRoutes.APPEARANCE) }
         )
 
         M3ModuleCard(
-            icon = Icons.Default.Tune,
+            icon = ImageVector.vectorResource(R.drawable.ic_tune),
             iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
             iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
             title = "内容与浏览",
@@ -231,7 +218,7 @@ private fun SettingsMainScreen(
         )
 
         M3ModuleCard(
-            icon = Icons.Default.Storage,
+            icon = ImageVector.vectorResource(R.drawable.ic_storage),
             iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
             iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
             title = stringResource(R.string.settings_storage),
@@ -241,7 +228,7 @@ private fun SettingsMainScreen(
         )
 
         M3ModuleCard(
-            icon = Icons.Default.CloudSync,
+            icon = ImageVector.vectorResource(R.drawable.ic_cloud_sync),
             iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             iconTint = MaterialTheme.colorScheme.primary,
             title = "备份与恢复",
@@ -255,7 +242,7 @@ private fun SettingsMainScreen(
             iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             iconTint = MaterialTheme.colorScheme.secondary,
             title = stringResource(R.string.settings_about),
-            subtitle = "版本 2.3.0 (Build 18)、更新检查、调试日志导出与记录清空",
+            subtitle = "版本 ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})、更新检查、调试日志导出与记录清空",
             testTag = "settings_about_card",
             onClick = { onNavigate(SettingsRoutes.ABOUT) }
         )

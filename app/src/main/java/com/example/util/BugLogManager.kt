@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.core.content.FileProvider
 import com.example.BuildConfig
 import com.example.R
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+@Immutable
 data class BugLogEntry(
     val timestamp: String,
     val timestampMs: Long,
@@ -63,10 +64,6 @@ object BugLogManager {
 
     private val _logCount = MutableStateFlow(0)
     val logCount: StateFlow<Int> = _logCount.asStateFlow()
-
-    val coroutineExceptionHandler = CoroutineExceptionHandler { coroutineCtx, throwable ->
-        logError(throwable, "CoroutineException[$coroutineCtx]")
-    }
 
     fun init(context: Context) {
         synchronized(lock) {
@@ -146,12 +143,6 @@ object BugLogManager {
     fun getLogs(): List<BugLogEntry> {
         synchronized(lock) {
             return entries.toList()
-        }
-    }
-
-    fun getLogCount(): Int {
-        synchronized(lock) {
-            return entries.size
         }
     }
 

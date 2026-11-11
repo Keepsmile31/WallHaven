@@ -10,10 +10,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.compose.runtime.Immutable
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.example.MainActivity
 import com.example.R
+import com.example.data.api.ApiClient
 import com.example.data.db.AppDatabase
 import com.example.data.db.DownloadEntity
 import com.example.data.model.WallpaperDto
@@ -34,6 +36,7 @@ import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
+@Immutable
 data class DownloadStatus(
     val wallpaperId: String,
     val progress: Int,
@@ -43,6 +46,7 @@ data class DownloadStatus(
     val fileUri: String? = null
 )
 
+@Immutable
 data class BatchDownloadResult(
     val total: Int,
     val successCount: Int,
@@ -62,9 +66,7 @@ class WallpaperDownloadManager(
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     private val downloadOkHttpClient: OkHttpClient by lazy {
-        OkHttpClient.Builder()
-            .followRedirects(true)
-            .followSslRedirects(true)
+        ApiClient.baseOkHttpClient.newBuilder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .build()

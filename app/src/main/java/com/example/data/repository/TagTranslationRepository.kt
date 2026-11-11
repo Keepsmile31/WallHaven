@@ -1,5 +1,6 @@
 package com.example.data.repository
 
+import androidx.compose.runtime.Immutable
 import com.example.data.api.ApiClient
 import com.example.data.db.AppDatabase
 import com.example.data.db.TagFtsEntity
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.util.concurrent.ConcurrentHashMap
 
+@Immutable
 data class TagSuggestion(
     val englishTag: String,
     val chineseName: String,

@@ -1,8 +1,13 @@
 package com.example.ui.components
 
 import android.content.Intent
+import android.graphics.drawable.ColorDrawable
+import android.os.Bundle
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
+import androidx.activity.ComponentDialog
+import androidx.activity.OnBackPressedCallback
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -37,11 +42,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -60,26 +62,39 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.findViewTreeViewModelStoreOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.findViewTreeSavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
@@ -88,7 +103,6 @@ import com.example.util.DownloadStatus
 import com.example.util.HapticHelper
 import com.example.util.WallpaperSetHelper
 import com.example.util.WallpaperTarget
-import com.example.data.repository.DefaultTagsDictionary
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -139,16 +153,7 @@ fun WallpaperDetailSheet(
     val fullSizeImageUrl = remember(wallpaper.id) {
         wallpaper.path.ifBlank { wallpaper.thumbs.original ?: wallpaper.thumbs.bestThumb }
     }
-    val previewImageRequest = remember(wallpaper.id, fullSizeImageUrl, cachedThumbUrl) {
-        ImageRequest.Builder(context)
-            .data(fullSizeImageUrl)
-            .placeholderMemoryCacheKey(cachedThumbUrl)
-            .memoryCacheKey(fullSizeImageUrl)
-            .diskCacheKey(fullSizeImageUrl)
-            .crossfade(200)
-            .build()
-    }
-    val fullScreenImageRequest = remember(wallpaper.id, fullSizeImageUrl, cachedThumbUrl) {
+    val fullImageRequest = remember(wallpaper.id, fullSizeImageUrl, cachedThumbUrl) {
         ImageRequest.Builder(context)
             .data(fullSizeImageUrl)
             .placeholderMemoryCacheKey(cachedThumbUrl)
@@ -282,7 +287,7 @@ fun WallpaperDetailSheet(
                     }
             ) {
                 AsyncImage(
-                    model = previewImageRequest,
+                    model = fullImageRequest,
                     contentDescription = "Wallpaper full preview",
                     contentScale = ContentScale.Fit, // Guarantees zero cropping!
                     onSuccess = { isPreviewLoading = false },
@@ -314,7 +319,7 @@ fun WallpaperDetailSheet(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Image,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_image),
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(13.dp)
@@ -371,7 +376,7 @@ fun WallpaperDetailSheet(
                             )
                         } else {
                             Icon(
-                                imageVector = Icons.Default.Download,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_download),
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -403,7 +408,7 @@ fun WallpaperDetailSheet(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Wallpaper,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_wallpaper),
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
@@ -520,10 +525,7 @@ fun WallpaperDetailSheet(
                             val chineseTranslation = if (isTagLocalizationEnabled) {
                                 (tagTranslations[raw]
                                     ?: tagTranslations[clean]
-                                    ?: tagTranslator?.invoke(tag.name)
-                                    ?: DefaultTagsDictionary.TAG_PAIRS.firstOrNull { 
-                                        it.first == raw || it.first == clean 
-                                    }?.second)
+                                    ?: tagTranslator?.invoke(tag.name))
                                     ?.replace(Regex("""[0-9a-fA-F]{16,}"""), "")
                                     ?.trim()
                                     ?.ifBlank { null }
@@ -684,19 +686,11 @@ fun WallpaperDetailSheet(
         )
     }
 
-    // Full Screen Preview Dialog with Smooth Enter & Exit Animations & Progressive Fast Loading
+    // Full Screen Preview Dialog with True Non-Floating Edge-to-Edge Immersive Window
     if (showFullScreenPreview) {
-        Dialog(
-            onDismissRequest = { isFullScreenVisible = false },
-            properties = DialogProperties(
-                usePlatformDefaultWidth = false,
-                decorFitsSystemWindows = false
-            )
+        ImmersiveFullScreenDialog(
+            onDismissRequest = { isFullScreenVisible = false }
         ) {
-            BackHandler(enabled = true) {
-                isFullScreenVisible = false
-            }
-
             LaunchedEffect(isFullScreenVisible) {
                 if (!isFullScreenVisible) {
                     delay(220)
@@ -717,7 +711,7 @@ fun WallpaperDetailSheet(
                     var isFullImageLoading by remember { mutableStateOf(true) }
 
                     AsyncImage(
-                        model = fullScreenImageRequest,
+                        model = fullImageRequest,
                         contentDescription = "Full Screen Wallpaper",
                         contentScale = ContentScale.Fit, // Zero cropping
                         onSuccess = { isFullImageLoading = false },
@@ -801,3 +795,88 @@ private fun formatFileSize(bytes: Long): String {
         String.format("%.1f KB", kb)
     }
 }
+
+@Composable
+private fun ImmersiveFullScreenDialog(
+    onDismissRequest: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    val context = LocalContext.current
+    val parentView = LocalView.current
+    val compositionContext = rememberCompositionContext()
+    val currentContent by rememberUpdatedState(content)
+    val currentOnDismiss by rememberUpdatedState(onDismissRequest)
+
+    val dialog = remember {
+        object : ComponentDialog(context, android.R.style.Theme_DeviceDefault_NoActionBar) {
+            override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                configureImmersiveWindow()
+            }
+
+            fun configureImmersiveWindow() {
+                window?.let { win ->
+                    WindowCompat.setDecorFitsSystemWindows(win, false)
+                    win.setLayout(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    win.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
+                    @Suppress("DEPRECATION")
+                    win.clearFlags(
+                        WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
+                            WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION or
+                            WindowManager.LayoutParams.FLAG_DIM_BEHIND
+                    )
+                    win.addFlags(
+                        WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    )
+                    @Suppress("DEPRECATION")
+                    win.statusBarColor = android.graphics.Color.TRANSPARENT
+                    @Suppress("DEPRECATION")
+                    win.navigationBarColor = android.graphics.Color.TRANSPARENT
+                    win.isStatusBarContrastEnforced = false
+                    win.isNavigationBarContrastEnforced = false
+                    win.attributes = win.attributes.apply {
+                        layoutInDisplayCutoutMode =
+                            WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    }
+                    WindowInsetsControllerCompat(win, win.decorView).apply {
+                        isAppearanceLightStatusBars = false
+                        isAppearanceLightNavigationBars = false
+                    }
+                }
+            }
+        }.apply {
+            setCancelable(true)
+            setCanceledOnTouchOutside(false)
+            onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    currentOnDismiss()
+                }
+            })
+            val composeView = ComposeView(context).apply {
+                setParentCompositionContext(compositionContext)
+                setContent {
+                    currentContent()
+                }
+            }
+            setContentView(composeView)
+            window?.decorView?.let { decor ->
+                decor.setViewTreeLifecycleOwner(parentView.findViewTreeLifecycleOwner())
+                decor.setViewTreeViewModelStoreOwner(parentView.findViewTreeViewModelStoreOwner())
+                decor.setViewTreeSavedStateRegistryOwner(parentView.findViewTreeSavedStateRegistryOwner())
+            }
+        }
+    }
+
+    DisposableEffect(dialog) {
+        dialog.show()
+        dialog.configureImmersiveWindow()
+        onDispose {
+            dialog.dismiss()
+        }
+    }
+}
+

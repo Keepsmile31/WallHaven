@@ -1,5 +1,6 @@
 package com.example.data.webdav
 
+import com.example.data.api.ApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Credentials
@@ -13,9 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class WebDavClient {
 
-    private val client: OkHttpClient = OkHttpClient.Builder()
-        .followRedirects(true)
-        .followSslRedirects(true)
+    private val client: OkHttpClient = ApiClient.baseOkHttpClient.newBuilder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)

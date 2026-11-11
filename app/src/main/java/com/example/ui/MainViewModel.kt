@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -75,7 +76,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _globalFilter = MutableStateFlow(
         FilterState(sorting = "toplist", topRange = "1M", categories = "111", purity = "110")
     )
-    val globalFilter = _globalFilter.asStateFlow()
 
     // Approach 2: Independent FilterState cache for each Tab
     private val _tabFilters = mutableMapOf(
@@ -138,7 +138,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val favorites: StateFlow<List<FavoriteWallpaperEntity>> = repository.getFavorites()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val favoriteIds: StateFlow<Set<String>> = favorites.map { list -> list.map { it.id }.toSet() }
+    val favoriteIds: StateFlow<Set<String>> = favorites
+        .map { list -> list.mapTo(HashSet(list.size)) { it.id } }
+        .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptySet())
 
     val browseHistory: StateFlow<List<HistoryEntity>> = repository.getHistory()
@@ -617,15 +619,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteHistoryItem(id: String) {
+        viewModelScope.launch {
+            repository.deleteHistoryItem(id)
+            hapticHelper.vibrateClick(settings.value.hapticFeedback)
+        }
+    }
+
+    fun batchDeleteHistory(ids: List<String>) {
+        viewModelScope.launch {
+            repository.batchDeleteHistory(ids)
+            hapticHelper.vibrateSuccess(settings.value.hapticFeedback)
+        }
+    }
+
     fun clearHistory() {
         viewModelScope.launch {
             repository.clearHistory()
+            hapticHelper.vibrateSuccess(settings.value.hapticFeedback)
+        }
+    }
+
+    fun deleteDownloadItem(id: String) {
+        viewModelScope.launch {
+            repository.deleteDownloadItem(id)
+            hapticHelper.vibrateClick(settings.value.hapticFeedback)
+        }
+    }
+
+    fun batchDeleteDownloads(ids: List<String>) {
+        viewModelScope.launch {
+            repository.batchDeleteDownloads(ids)
+            hapticHelper.vibrateSuccess(settings.value.hapticFeedback)
         }
     }
 
     fun clearDownloads() {
         viewModelScope.launch {
             repository.clearDownloads()
+            hapticHelper.vibrateSuccess(settings.value.hapticFeedback)
         }
     }
 

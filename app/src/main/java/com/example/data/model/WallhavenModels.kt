@@ -1,8 +1,10 @@
 package com.example.data.model
 
+import androidx.compose.runtime.Immutable
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class SearchResponse(
     @Json(name = "data") val data: List<WallpaperDto> = emptyList(),
@@ -14,14 +16,13 @@ data class WallpaperDetailResponse(
     @Json(name = "data") val data: WallpaperDto
 )
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class WallpaperDto(
     @Json(name = "id") val id: String,
     @Json(name = "url") val url: String = "",
-    @Json(name = "short_url") val shortUrl: String? = null,
     @Json(name = "views") val views: Int = 0,
     @Json(name = "favorites") val favorites: Int = 0,
-    @Json(name = "source") val source: String? = null,
     @Json(name = "purity") val purity: String = "sfw",
     @Json(name = "category") val category: String = "general",
     @Json(name = "dimension_x") val dimensionX: Int = 1920,
@@ -34,10 +35,10 @@ data class WallpaperDto(
     @Json(name = "colors") val colors: List<String> = emptyList(),
     @Json(name = "path") val path: String = "",
     @Json(name = "thumbs") val thumbs: ThumbsDto = ThumbsDto(),
-    @Json(name = "tags") val tags: List<TagDto> = emptyList(),
-    @Json(name = "uploader") val uploader: UploaderDto? = null
+    @Json(name = "tags") val tags: List<TagDto> = emptyList()
 )
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class ThumbsDto(
     @Json(name = "large") val large: String? = null,
@@ -65,6 +66,7 @@ data class ThumbsDto(
     }
 }
 
+@Immutable
 @JsonClass(generateAdapter = true)
 data class TagDto(
     @Json(name = "id") val id: Int,
@@ -75,19 +77,9 @@ data class TagDto(
     @Json(name = "purity") val purity: String? = null
 )
 
-@JsonClass(generateAdapter = true)
-data class UploaderDto(
-    @Json(name = "username") val username: String? = null,
-    @Json(name = "group") val group: String? = null,
-    @Json(name = "avatar") val avatar: Map<String, String>? = null
-)
-
+@Immutable
 @JsonClass(generateAdapter = true)
 data class MetaDto(
     @Json(name = "current_page") val currentPage: Int = 1,
-    @Json(name = "last_page") val lastPage: Int = 1,
-    @Json(name = "per_page") val perPage: Int = 24,
-    @Json(name = "total") val total: Int = 0,
-    @Json(name = "query") val query: String? = null,
-    @Json(name = "seed") val seed: String? = null
+    @Json(name = "last_page") val lastPage: Int = 1
 )

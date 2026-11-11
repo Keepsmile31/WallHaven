@@ -8,10 +8,13 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.example.R
 
+@Immutable
 data class ThemeColorDefinition(
     val key: String,
     val nameRes: Int,
@@ -51,6 +54,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.Black,
                 primaryContainer = def.primary.copy(alpha = 0.6f),
                 onPrimaryContainer = Color.White,
+                inversePrimary = def.primary,
                 secondary = def.primaryLight,
                 onSecondary = Color.Black,
                 secondaryContainer = def.primaryDark.copy(alpha = 0.45f),
@@ -68,6 +72,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.Black,
                 primaryContainer = Color(0xFF2E3136),
                 onPrimaryContainer = Color(0xFFE0E0E0),
+                inversePrimary = def.primary.copy(alpha = 0.85f),
                 secondary = Color(0xFFA0A5AD),
                 onSecondary = Color.Black,
                 secondaryContainer = Color(0xFF25272B),
@@ -85,6 +90,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.Black,
                 primaryContainer = Color(0xFF252528),
                 onPrimaryContainer = Color.White,
+                inversePrimary = def.primary,
                 secondary = Color.White,
                 onSecondary = Color.Black,
                 secondaryContainer = def.primaryDark,
@@ -102,6 +108,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.Black,
                 primaryContainer = def.primaryDark.copy(alpha = 0.65f),
                 onPrimaryContainer = Color.White,
+                inversePrimary = def.primary,
                 secondary = def.primary,
                 onSecondary = Color.White,
                 secondaryContainer = def.primaryDark.copy(alpha = 0.35f),
@@ -122,6 +129,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.White,
                 primaryContainer = def.primaryLight.copy(alpha = 0.28f),
                 onPrimaryContainer = def.primaryDark,
+                inversePrimary = def.primaryLight,
                 secondary = def.primaryDark,
                 onSecondary = Color.White,
                 secondaryContainer = def.primaryLight.copy(alpha = 0.18f),
@@ -139,6 +147,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.White,
                 primaryContainer = Color(0xFFEAECEF),
                 onPrimaryContainer = Color(0xFF1E2024),
+                inversePrimary = def.primaryLight.copy(alpha = 0.85f),
                 secondary = Color(0xFF5A606A),
                 onSecondary = Color.White,
                 secondaryContainer = Color(0xFFF0F2F5),
@@ -156,6 +165,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.White,
                 primaryContainer = Color(0xFFE2E4E8),
                 onPrimaryContainer = Color.Black,
+                inversePrimary = def.primary,
                 secondary = Color.Black,
                 onSecondary = Color.White,
                 secondaryContainer = Color(0xFFEEEEEE),
@@ -173,6 +183,7 @@ fun buildCustomColorScheme(
                 onPrimary = Color.White,
                 primaryContainer = def.primary.copy(alpha = 0.16f),
                 onPrimaryContainer = def.primaryDark,
+                inversePrimary = def.primaryLight,
                 secondary = def.primaryDark,
                 onSecondary = Color.White,
                 secondaryContainer = def.primaryLight.copy(alpha = 0.12f),
@@ -216,26 +227,28 @@ fun WallhavenTheme(
     }
 
     val context = LocalContext.current
-    var colorScheme = when {
-        dynamicColor -> {
-            val dynamic = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            if (isDark && amoledBlack) {
-                dynamic.copy(
-                    background = WallhavenAmoledBg,
-                    surface = WallhavenAmoledSurface,
-                    surfaceVariant = Color(0xFF161616)
-                )
-            } else {
-                dynamic
+    val colorScheme = remember(isDark, dynamicColor, themeColor, colorStyle, amoledBlack, context) {
+        when {
+            dynamicColor -> {
+                val dynamic = if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                if (isDark && amoledBlack) {
+                    dynamic.copy(
+                        background = WallhavenAmoledBg,
+                        surface = WallhavenAmoledSurface,
+                        surfaceVariant = Color(0xFF161616)
+                    )
+                } else {
+                    dynamic
+                }
             }
-        }
-        else -> {
-            buildCustomColorScheme(
-                themeColorKey = themeColor,
-                colorStyle = colorStyle,
-                isDark = isDark,
-                amoledBlack = amoledBlack
-            )
+            else -> {
+                buildCustomColorScheme(
+                    themeColorKey = themeColor,
+                    colorStyle = colorStyle,
+                    isDark = isDark,
+                    amoledBlack = amoledBlack
+                )
+            }
         }
     }
 

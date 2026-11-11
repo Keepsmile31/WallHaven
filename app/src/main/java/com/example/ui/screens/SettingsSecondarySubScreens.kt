@@ -5,7 +5,9 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,23 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.automirrored.filled.Rule
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.CloudSync
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.FileUpload
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -47,7 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -59,19 +45,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.BuildConfig
 import com.example.R
 import com.example.data.backup.BackupManager
 import com.example.data.preferences.AppSettings
 import com.example.data.preferences.UserPreferencesManager
 import com.example.data.webdav.WebDavClient
+import com.example.ui.components.LiquidGlassSwitch
 import com.example.util.BugLogManager
 import com.example.util.HapticHelper
 import kotlinx.coroutines.launch
@@ -149,10 +143,10 @@ internal fun SettingsBackupScreen(
         title = "备份与恢复",
         onBack = onBack
     ) {
-        M3SettingsSectionTitle(title = "WebDAV 云端同步", icon = Icons.Default.CloudSync)
+        M3SettingsSectionTitle(title = "WebDAV 云端同步", icon = ImageVector.vectorResource(R.drawable.ic_cloud_sync))
         M3SettingsCard {
             M3SettingsItemRow(
-                icon = Icons.Default.CloudSync,
+                icon = ImageVector.vectorResource(R.drawable.ic_cloud_sync),
                 title = "WebDAV 云端服务器",
                 subtitle = if (settings.webDavUrl.isNotBlank()) settings.webDavUrl else "未配置 (支持坚果云、Nextcloud、群晖等服务)",
                 testTag = "settings_webdav_row",
@@ -176,7 +170,7 @@ internal fun SettingsBackupScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.Folder,
+                icon = ImageVector.vectorResource(R.drawable.ic_folder),
                 title = "云端备份路径",
                 subtitle = "${settings.webDavPath.ifBlank { "/wallhaven_backup/" }}wallhaven_backup.json",
                 onClick = { showWebDavDialog = true }
@@ -185,7 +179,7 @@ internal fun SettingsBackupScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.CloudUpload,
+                icon = ImageVector.vectorResource(R.drawable.ic_cloud_upload),
                 title = "立即备份至云端",
                 subtitle = if (isBackingUpToWebDav) "正在上传备份至 WebDAV 云端..." else "将收藏、历史记录与偏好设置即时上传至云端",
                 enabled = !isBackingUpToWebDav,
@@ -217,7 +211,7 @@ internal fun SettingsBackupScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.CloudDownload,
+                icon = ImageVector.vectorResource(R.drawable.ic_cloud_download),
                 title = "从云端恢复数据",
                 subtitle = if (isRestoringFromWebDav) "正在从云端下载并恢复记录..." else "从云端同步下载备份并合并本地记录",
                 enabled = !isRestoringFromWebDav,
@@ -249,12 +243,12 @@ internal fun SettingsBackupScreen(
                 }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.Sync,
+                icon = ImageVector.vectorResource(R.drawable.ic_sync),
                 title = "WebDAV 每日自动备份",
                 subtitle = if (settings.webDavUrl.isNotBlank()) "每日冷启动时自动在后台上传备份至云端" else "需要先配置 WebDAV 服务器",
                 onClick = { toggleAutoBackup() },
                 trailingContent = {
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = settings.webDavAutoBackup,
                         onCheckedChange = { checked ->
                             if (checked && settings.webDavUrl.isBlank()) {
@@ -273,17 +267,17 @@ internal fun SettingsBackupScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.AutoMirrored.Filled.Rule,
+                icon = ImageVector.vectorResource(R.drawable.ic_rule),
                 title = "恢复合并策略",
                 subtitle = "恢复时智能合并本地与云端数据，保留较新记录",
                 onClick = { showBackupStrategyDialog = true }
             )
         }
 
-        M3SettingsSectionTitle(title = "本地文件备份与导出", icon = Icons.Default.Storage)
+        M3SettingsSectionTitle(title = "本地文件备份与导出", icon = ImageVector.vectorResource(R.drawable.ic_storage))
         M3SettingsCard {
             M3SettingsItemRow(
-                icon = Icons.Default.FileUpload,
+                icon = ImageVector.vectorResource(R.drawable.ic_file_upload),
                 title = stringResource(R.string.export_data),
                 subtitle = stringResource(R.string.export_data_desc),
                 onClick = { exportLauncher.launch("wallhaven_backup_${System.currentTimeMillis()}.json") }
@@ -292,7 +286,7 @@ internal fun SettingsBackupScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.FileDownload,
+                icon = ImageVector.vectorResource(R.drawable.ic_file_download),
                 title = stringResource(R.string.import_data),
                 subtitle = stringResource(R.string.import_data_desc),
                 onClick = { importLauncher.launch(arrayOf("application/json", "text/*")) }
@@ -421,9 +415,13 @@ private fun WebDavConfigDialog(
                         Text("开启每日自动备份", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                         Text("每日首次冷启动应用时自动同步", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Switch(
+                    LiquidGlassSwitch(
                         checked = autoBackupInput,
-                        onCheckedChange = { autoBackupInput = it }
+                        onCheckedChange = {
+                            hapticHelper.vibrateTick(settings.hapticFeedback)
+                            autoBackupInput = it
+                        },
+                        backdropColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     )
                 }
                 OutlinedButton(
@@ -535,18 +533,27 @@ internal fun SettingsAboutScreen(
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
+                val appIconBg = if (isDarkTheme) Color(0xFF2E2F34) else Color.White
+                val appIconFg = if (isDarkTheme) Color.White else Color(0xFF2E2F34)
+
                 Box(
                     modifier = Modifier
                         .size(68.dp)
                         .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .background(appIconBg)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(18.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Palette,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(36.dp)
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_brand_logo),
+                        contentDescription = stringResource(R.string.app_name),
+                        colorFilter = ColorFilter.tint(appIconFg),
+                        modifier = Modifier.size(56.dp)
                     )
                 }
 
@@ -566,7 +573,7 @@ internal fun SettingsAboutScreen(
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 ) {
                     Text(
-                        text = "v2.3.0 (Build 18)",
+                        text = "v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
@@ -588,14 +595,14 @@ internal fun SettingsAboutScreen(
                     onClick = { showUpdateDialog = true },
                     modifier = Modifier.fillMaxWidth().testTag("check_update_button")
                 ) {
-                    Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_cloud_download), contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("检查更新 (123云盘发布源)")
                 }
             }
         }
 
-        M3SettingsSectionTitle(title = "条款与支持", icon = Icons.Default.Description)
+        M3SettingsSectionTitle(title = "条款与支持", icon = ImageVector.vectorResource(R.drawable.ic_description))
         M3SettingsCard {
             M3SettingsItemRow(
                 icon = Icons.Default.Info,
@@ -607,7 +614,7 @@ internal fun SettingsAboutScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.Description,
+                icon = ImageVector.vectorResource(R.drawable.ic_description),
                 title = stringResource(R.string.user_agreement_title),
                 subtitle = "服务条款与使用准则",
                 onClick = { showUserAgreementDialog = true }
@@ -616,7 +623,7 @@ internal fun SettingsAboutScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.Policy,
+                icon = ImageVector.vectorResource(R.drawable.ic_policy),
                 title = stringResource(R.string.privacy_policy_title),
                 subtitle = "隐私保护、权限与数据安全政策",
                 onClick = { showPrivacyPolicyDialog = true }
@@ -625,7 +632,7 @@ internal fun SettingsAboutScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.AutoMirrored.Filled.OpenInNew,
+                icon = ImageVector.vectorResource(R.drawable.ic_open_in_new),
                 title = "WallHaven 官方主站",
                 subtitle = "https://wallhaven.cc",
                 onClick = {
@@ -641,7 +648,7 @@ internal fun SettingsAboutScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.AutoMirrored.Filled.OpenInNew,
+                icon = ImageVector.vectorResource(R.drawable.ic_open_in_new),
                 title = "开发者主页 (酷安)",
                 subtitle = "前往酷安查看最新动态与交流讨论",
                 onClick = {
@@ -653,11 +660,28 @@ internal fun SettingsAboutScreen(
                     }
                 }
             )
+
+            M3SettingsDivider()
+
+            M3SettingsItemRow(
+                icon = ImageVector.vectorResource(R.drawable.ic_open_in_new),
+                title = stringResource(R.string.about_project_url),
+                subtitle = "https://github.com/Keepsmile31/WallHaven",
+                testTag = "about_project_url_row",
+                onClick = {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Keepsmile31/WallHaven"))
+                    try {
+                        context.startActivity(browserIntent)
+                    } catch (_: Exception) {
+                        Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
         }
 
         M3SettingsSectionTitle(
             title = stringResource(R.string.debug_logs_section_title),
-            icon = Icons.Default.BugReport
+            icon = ImageVector.vectorResource(R.drawable.ic_bug_report)
         )
         M3SettingsCard {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -717,10 +741,10 @@ internal fun SettingsAboutScreen(
             }
         }
 
-        M3SettingsSectionTitle(title = "记录重置", icon = Icons.Default.DeleteOutline)
+        M3SettingsSectionTitle(title = "记录重置", icon = ImageVector.vectorResource(R.drawable.ic_delete_outline))
         M3SettingsCard {
             M3SettingsItemRow(
-                icon = Icons.Default.DeleteOutline,
+                icon = ImageVector.vectorResource(R.drawable.ic_delete_outline),
                 title = "清空浏览历史",
                 subtitle = "清除本地所有已浏览壁纸记录",
                 onClick = { showClearHistoryDialog = true }
@@ -729,7 +753,7 @@ internal fun SettingsAboutScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = Icons.Default.DeleteOutline,
+                icon = ImageVector.vectorResource(R.drawable.ic_delete_outline),
                 title = "清空下载记录",
                 subtitle = "清除本地下载管理列表（不会删除已下载的本地壁纸文件）",
                 onClick = { showClearDownloadsDialog = true }
@@ -813,7 +837,7 @@ private fun UpdateCheckDialog(onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "当前安装版本: v2.3.0 (Build 18)",
+                    text = "当前安装版本: v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp
                 )
@@ -848,7 +872,7 @@ private fun UpdateCheckDialog(onDismiss: () -> Unit) {
                     }
                 }
             ) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text("前往 123 云盘")
             }
@@ -870,7 +894,7 @@ private fun AboutWallHavenDialog(onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("WallHaven Android 客户端", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                Text("版本: 2.3.0 (18)", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                Text("版本: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", fontSize = 13.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
                 Text(stringResource(R.string.about_target_platform), fontSize = 12.sp)
                 Text(
                     text = stringResource(R.string.about_app_desc),
@@ -902,6 +926,18 @@ private fun AboutWallHavenDialog(onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(stringResource(R.string.about_developer_link), fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = {
+                        try {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Keepsmile31/WallHaven")))
+                        } catch (_: Exception) {
+                            Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("${stringResource(R.string.about_project_url)} (GitHub)", fontSize = 12.sp)
                 }
             }
         },

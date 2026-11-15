@@ -28,11 +28,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -55,8 +50,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -103,13 +100,9 @@ private val WallhavenColors = listOf(
 )
 
 val PrecomputedWallhavenColors: List<PrecomputedColor> = WallhavenColors.map { hex ->
-    val colorInt = try {
-        android.graphics.Color.parseColor("#$hex")
-    } catch (_: Exception) {
-        0xFF000000.toInt()
-    }
+    val colorLong = hex.toLongOrNull(16)?.let { it or 0xFF000000 } ?: 0xFF000000
     val isLight = hex.equals("ffffff", true) || hex.equals("cccccc", true) || hex.equals("ffff00", true)
-    PrecomputedColor(hex, Color(colorInt), isLight)
+    PrecomputedColor(hex, Color(colorLong), isLight)
 }
 
 val StyleOptions = listOf(
@@ -284,7 +277,11 @@ fun FilterBottomSheet(
                     },
                     modifier = Modifier.testTag("filter_sheet_reset_btn")
                 ) {
-                    Icon(imageVector = Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_refresh),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(stringResource(R.string.filter_reset), fontSize = 12.sp)
                 }
@@ -423,7 +420,7 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text(title, fontSize = 12.sp) },
                                 leadingIcon = if (isChecked) {
-                                    { Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(16.dp)) }
                                 } else null,
                                 modifier = Modifier.testTag("cat_chip_$index")
                             )
@@ -459,9 +456,9 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text(title, fontSize = 12.sp) },
                                 leadingIcon = if (isChecked) {
-                                    { Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(16.dp)) }
                                 } else if (isRestricted && !hasApiKey) {
-                                    { Icon(imageVector = Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                    { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_lock), contentDescription = null, modifier = Modifier.size(14.dp)) }
                                 } else null,
                                 colors = if (isRestricted && isChecked) {
                                     FilterChipDefaults.filterChipColors(
@@ -502,7 +499,7 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text(label, fontSize = 12.sp) },
                                 leadingIcon = if (isSelected) {
-                                    { Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                    { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(14.dp)) }
                                 } else null,
                                 modifier = Modifier.testTag("style_chip_$key")
                             )
@@ -532,7 +529,7 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text(label, fontSize = 12.sp) },
                                 leadingIcon = if (isSelected) {
-                                    { Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                    { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(14.dp)) }
                                 } else null,
                                 modifier = Modifier.testTag("ratio_chip_$key")
                             )
@@ -559,7 +556,7 @@ fun FilterBottomSheet(
                                 },
                                 label = { Text(label, fontSize = 12.sp) },
                                 leadingIcon = if (isSelected) {
-                                    { Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                    { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(14.dp)) }
                                 } else null,
                                 modifier = Modifier.testTag("atleast_chip_${key.ifBlank { "none" }}")
                             )
@@ -596,7 +593,7 @@ fun FilterBottomSheet(
                                     },
                                     label = { Text(label, fontSize = 12.sp) },
                                     leadingIcon = if (isSelected) {
-                                        { Icon(imageVector = Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                        { Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_check), contentDescription = null, modifier = Modifier.size(14.dp)) }
                                     } else null,
                                     modifier = Modifier.testTag("res_chip_$key")
                                 )
@@ -636,7 +633,7 @@ fun FilterBottomSheet(
                             ) {
                                 if (isSelected) {
                                     Icon(
-                                        imageVector = Icons.Default.Check,
+                                        imageVector = ImageVector.vectorResource(R.drawable.ic_check),
                                         contentDescription = "Selected color #${item.hex}",
                                         tint = if (item.isLight) Color.Black else Color.White,
                                         modifier = Modifier.size(16.dp)
@@ -653,7 +650,7 @@ fun FilterBottomSheet(
                                 .padding(vertical = 4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Close,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_close),
                                 contentDescription = "Clear color",
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)

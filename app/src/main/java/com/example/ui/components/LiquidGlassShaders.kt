@@ -89,9 +89,7 @@ internal object LiquidGlassShaders {
         }
     """
 
-    fun createBarShader(): RuntimeShader = RuntimeShader(LIQUID_GLASS_CAPSULE_AGSL)
-
-    fun createLensShader(): RuntimeShader = RuntimeShader(LIQUID_GLASS_CAPSULE_AGSL)
+    fun createCapsuleShader(): RuntimeShader = RuntimeShader(LIQUID_GLASS_CAPSULE_AGSL)
 
     fun buildStandardBlurEffect(radiusPx: Float): ComposeRenderEffect? {
         if (radiusPx <= 0.5f) return null

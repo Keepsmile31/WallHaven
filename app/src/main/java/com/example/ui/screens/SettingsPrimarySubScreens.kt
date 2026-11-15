@@ -23,9 +23,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,6 +65,43 @@ import com.example.ui.theme.AvailableThemeColors
 import com.example.util.CacheManager
 import com.example.util.HapticHelper
 import kotlinx.coroutines.launch
+
+private val ColorStyleOptions = listOf(
+    "vibrant" to R.string.style_vibrant,
+    "expressive" to R.string.style_expressive,
+    "neutral" to R.string.style_neutral,
+    "high_contrast" to R.string.style_high_contrast
+)
+
+private val LiquidGlassModeOptions = listOf(
+    Triple(
+        "none",
+        R.string.liquid_glass_none,
+        "使用纯色不透明胶囊与常规开关，关闭模糊与玻璃折射效果"
+    ),
+    Triple(
+        "standard",
+        R.string.liquid_glass_standard,
+        "启用柔和背景模糊与半透明质感，兼顾观感与性能流畅度"
+    ),
+    Triple(
+        "ultimate",
+        R.string.liquid_glass_ultimate,
+        "开启物理边缘折射、彩虹色散高光与悬浮水滴透镜（默认）"
+    )
+)
+
+private val DarkModeOptions = listOf(
+    Triple("system", R.string.dark_mode_follow_system, "根据系统夜间模式自动切换"),
+    Triple("light", R.string.dark_mode_light, "始终使用浅色外观"),
+    Triple("dark", R.string.dark_mode_dark, "始终使用深色外观")
+)
+
+private val AutoClearStrategies = listOf(
+    Triple("none", "不自动清理", "保留本地缓存，仅在手动点击或系统空间紧张时清理"),
+    Triple("every_3_days", "每 3 天自动清理", "应用启动时若距上次清理已超 3 天，则自动重置缓存"),
+    Triple("on_exit", "退出应用时自动清理", "应用完全关闭/退出时自动清空磁盘与内存缓存")
+)
 
 @Composable
 internal fun SettingsAppearanceScreen(
@@ -158,7 +192,7 @@ internal fun SettingsAppearanceScreen(
                                     ) {
                                         if (isSelected) {
                                             Icon(
-                                                imageVector = Icons.Default.Check,
+                                                imageVector = ImageVector.vectorResource(R.drawable.ic_check),
                                                 contentDescription = null,
                                                 tint = Color.White,
                                                 modifier = Modifier.size(20.dp)
@@ -193,12 +227,7 @@ internal fun SettingsAppearanceScreen(
                                 .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            listOf(
-                                "vibrant" to R.string.style_vibrant,
-                                "expressive" to R.string.style_expressive,
-                                "neutral" to R.string.style_neutral,
-                                "high_contrast" to R.string.style_high_contrast
-                            ).forEach { (styleKey, nameRes) ->
+                            ColorStyleOptions.forEach { (styleKey, nameRes) ->
                                 FilterChip(
                                     selected = settings.colorStyle == styleKey,
                                     onClick = {
@@ -375,7 +404,7 @@ internal fun SettingsAppearanceScreen(
                 scope.launch { preferencesManager.setShowFavoritesCount(next) }
             }
             M3SettingsItemRow(
-                icon = Icons.Default.Favorite,
+                icon = ImageVector.vectorResource(R.drawable.ic_favorite_filled),
                 title = stringResource(R.string.settings_show_favorites_count),
                 subtitle = stringResource(R.string.settings_show_favorites_count_desc),
                 onClick = { toggleFavCount() },
@@ -424,29 +453,12 @@ private fun LiquidGlassModeDialog(
     onSelectMode: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val modes = listOf(
-        Triple(
-            "none",
-            stringResource(R.string.liquid_glass_none),
-            "使用纯色不透明胶囊与常规开关，关闭模糊与玻璃折射效果"
-        ),
-        Triple(
-            "standard",
-            stringResource(R.string.liquid_glass_standard),
-            "启用柔和背景模糊与半透明质感，兼顾观感与性能流畅度"
-        ),
-        Triple(
-            "ultimate",
-            stringResource(R.string.liquid_glass_ultimate),
-            "开启物理边缘折射、彩虹色散高光与悬浮水滴透镜（默认）"
-        )
-    )
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_liquid_glass)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                modes.forEach { (modeKey, modeTitle, modeDesc) ->
+                LiquidGlassModeOptions.forEach { (modeKey, modeTitleRes, modeDesc) ->
                     val isSelected = currentMode == modeKey
                     Row(
                         modifier = Modifier
@@ -462,7 +474,7 @@ private fun LiquidGlassModeDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = modeTitle,
+                                text = stringResource(modeTitleRes),
                                 fontSize = 15.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
@@ -491,17 +503,12 @@ private fun DarkModeDialog(
     onSelectMode: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val modes = listOf(
-        Triple("system", stringResource(R.string.dark_mode_follow_system), "根据系统夜间模式自动切换"),
-        Triple("light", stringResource(R.string.dark_mode_light), "始终使用浅色外观"),
-        Triple("dark", stringResource(R.string.dark_mode_dark), "始终使用深色外观")
-    )
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_dark_mode)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                modes.forEach { (modeKey, modeTitle, modeDesc) ->
+                DarkModeOptions.forEach { (modeKey, modeTitleRes, modeDesc) ->
                     val isSelected = currentMode == modeKey
                     Row(
                         modifier = Modifier
@@ -517,7 +524,7 @@ private fun DarkModeDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = modeTitle,
+                                text = stringResource(modeTitleRes),
                                 fontSize = 15.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
@@ -914,13 +921,7 @@ internal fun SettingsStorageScreen(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
 
-                val strategies = listOf(
-                    Triple("none", "不自动清理", "保留本地缓存，仅在手动点击或系统空间紧张时清理"),
-                    Triple("every_3_days", "每 3 天自动清理", "应用启动时若距上次清理已超 3 天，则自动重置缓存"),
-                    Triple("on_exit", "退出应用时自动清理", "应用完全关闭/退出时自动清空磁盘与内存缓存")
-                )
-
-                strategies.forEach { (modeKey, title, description) ->
+                AutoClearStrategies.forEach { (modeKey, title, description) ->
                     val isSelected = settings.autoClearCacheMode == modeKey
                     Row(
                         modifier = Modifier

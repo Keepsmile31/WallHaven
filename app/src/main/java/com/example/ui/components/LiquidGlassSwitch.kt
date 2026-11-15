@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,11 +25,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
@@ -103,7 +105,7 @@ fun LiquidGlassSwitch(
     }
 
     val targetFraction = if (isDragging) dragFraction else if (checked) 1f else 0f
-    val animatedFraction by animateFloatAsState(
+    val animatedFractionState = animateFloatAsState(
         targetValue = targetFraction,
         animationSpec = if (isDragging) {
             snap()
@@ -117,7 +119,7 @@ fun LiquidGlassSwitch(
     )
 
     val isLensElevated = (isPressed || isDragging || isTapPulsing) && enabled
-    val lensProgress by animateFloatAsState(
+    val lensProgressState = animateFloatAsState(
         targetValue = if (isLensElevated) 1f else 0f,
         animationSpec = spring(
             dampingRatio = 0.72f,
@@ -174,56 +176,20 @@ fun LiquidGlassSwitch(
     } else {
         primaryColor
     }
-    val trackColor = lerp(offTrackColor, onTrackColor, animatedFraction)
-        .let { if (enabled) it else it.copy(alpha = 0.45f) }
 
     val trackLayer = rememberGraphicsLayer()
-    val lensShader = remember { LiquidGlassShaders.createLensShader() }
+    val lensShader = remember { LiquidGlassShaders.createCapsuleShader() }
+    val edgeBandPx = remember(density) { with(density) { 11.dp.toPx() } }
+    val maxStandardBlurPx = remember(density) { with(density) { 6.dp.toPx() } }
+    val maxRefractionPx = remember(density) { with(density) { 12.dp.toPx() } }
+    val minShadowPx = remember(density) { with(density) { 3.dp.toPx() } }
+    val maxShadowPx = remember(density) { with(density) { 8.dp.toPx() } }
 
-    val curThumbWidthPx = lerp(thumbRestWidthPx, thumbExpandedWidthPx, lensProgress)
-    val curThumbHeightPx = lerp(thumbRestHeightPx, thumbExpandedHeightPx, lensProgress)
-    val thumbCenterX = trackLeftPx + thumbPadPx + thumbRestWidthPx * 0.5f + animatedFraction * travelPx
-    val thumbCenterY = trackTopPx + trackHeightPx * 0.5f
-    val thumbLeftPx = thumbCenterX - curThumbWidthPx * 0.5f
-    val thumbTopPx = thumbCenterY - curThumbHeightPx * 0.5f
-
-    val lensRenderEffect = remember(
-        liquidGlassMode,
-        curThumbWidthPx,
-        curThumbHeightPx,
-        lensProgress,
-        isDarkTheme,
-        backdropColor
-    ) {
-        if (!isGlassActive || lensProgress <= 0.02f) {
-            null
-        } else {
-            when (liquidGlassMode) {
-                "standard" -> {
-                    LiquidGlassShaders.buildStandardBlurEffect(with(density) { (6.dp * lensProgress).toPx() })
-                }
-                "ultimate" -> {
-                    val refractionPx = with(density) { (12.dp * lensProgress).toPx() }
-                    val edgeBandPx = with(density) { 11.dp.toPx() }
-                    LiquidGlassShaders.buildUltimateCapsuleEffect(
-                        shader = lensShader,
-                        widthPx = curThumbWidthPx,
-                        heightPx = curThumbHeightPx,
-                        cornerRadiusPx = curThumbHeightPx * 0.5f,
-                        blurRadiusPx = 0f,
-                        refractionPx = refractionPx,
-                        dispersion = 0.72f * lensProgress,
-                        zoom = 0.09f * lensProgress,
-                        edgeBandPx = edgeBandPx,
-                        specular = if (isDarkTheme) 0.28f else 0.42f,
-                        fallbackColorR = backdropColor.red,
-                        fallbackColorG = backdropColor.green,
-                        fallbackColorB = backdropColor.blue
-                    )
-                }
-                else -> null
-            }
-        }
+    val showGlassLens by remember(isGlassActive) {
+        derivedStateOf { isGlassActive && lensProgressState.value > 0.02f }
+    }
+    val showRestThumb by remember(isGlassActive) {
+        derivedStateOf { !isGlassActive || lensProgressState.value < 0.99f }
     }
 
     val lensBorderBrush = remember(isDarkTheme, isUltimate) {
@@ -244,6 +210,24 @@ fun LiquidGlassSwitch(
                 )
             )
         }
+    }
+
+    val lensGlossBrush = remember(isDarkTheme) {
+        Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = if (isDarkTheme) 0.16f else 0.28f),
+                Color.Transparent,
+                Color.White.copy(alpha = if (isDarkTheme) 0.08f else 0.14f)
+            )
+        )
+    }
+
+    val ambientShadow = Color.Black.copy(alpha = if (isDarkTheme) 0.45f else 0.10f)
+    val spotShadow = Color.Black.copy(alpha = if (isDarkTheme) 0.55f else 0.16f)
+    val thumbOverlayColor = if (isDarkTheme) {
+        Color.White.copy(alpha = if (isUltimate) 0.14f else 0.26f)
+    } else {
+        Color.White.copy(alpha = if (isUltimate) 0.18f else 0.34f)
     }
 
     Box(
@@ -346,7 +330,10 @@ fun LiquidGlassSwitch(
                     }
                 }
                 .clip(CircleShape)
-                .background(trackColor)
+                .drawBehind {
+                    val baseTrackColor = lerp(offTrackColor, onTrackColor, animatedFractionState.value)
+                    drawRect(if (enabled) baseTrackColor else baseTrackColor.copy(alpha = 0.45f))
+                }
                 .border(
                     width = 0.8.dp,
                     color = if (isDarkTheme) {
@@ -362,6 +349,15 @@ fun LiquidGlassSwitch(
         Box(
             modifier = Modifier
                 .layout { measurable, _ ->
+                    val lp = lensProgressState.value
+                    val af = animatedFractionState.value
+                    val curThumbWidthPx = lerp(thumbRestWidthPx, thumbExpandedWidthPx, lp)
+                    val curThumbHeightPx = lerp(thumbRestHeightPx, thumbExpandedHeightPx, lp)
+                    val thumbCenterX = trackLeftPx + thumbPadPx + thumbRestWidthPx * 0.5f + af * travelPx
+                    val thumbCenterY = trackTopPx + trackHeightPx * 0.5f
+                    val thumbLeftPx = thumbCenterX - curThumbWidthPx * 0.5f
+                    val thumbTopPx = thumbCenterY - curThumbHeightPx * 0.5f
+
                     val w = curThumbWidthPx.roundToInt().coerceAtLeast(1)
                     val h = curThumbHeightPx.roundToInt().coerceAtLeast(1)
                     val placeable = measurable.measure(Constraints.fixed(w, h))
@@ -372,26 +368,58 @@ fun LiquidGlassSwitch(
                         )
                     }
                 }
-                .shadow(
-                    elevation = lerp(3.dp.value, 8.dp.value, lensProgress).dp,
-                    shape = CircleShape,
-                    ambientColor = Color.Black.copy(alpha = if (isDarkTheme) 0.45f else 0.10f),
-                    spotColor = Color.Black.copy(alpha = if (isDarkTheme) 0.55f else 0.16f)
-                )
-                .clip(CircleShape)
+                .graphicsLayer {
+                    shadowElevation = lerp(minShadowPx, maxShadowPx, lensProgressState.value)
+                    shape = CircleShape
+                    clip = true
+                    ambientShadowColor = ambientShadow
+                    spotShadowColor = spotShadow
+                }
         ) {
             // Refracted / Frosted Liquid Glass lens interior when pressed / dragging / toggling
-            if (isGlassActive && lensProgress > 0.02f) {
+            if (showGlassLens) {
                 Canvas(
                     modifier = Modifier
                         .matchParentSize()
                         .graphicsLayer {
-                            alpha = lensProgress
-                            renderEffect = lensRenderEffect
+                            val lp = lensProgressState.value
+                            alpha = lp
+                            renderEffect = when (liquidGlassMode) {
+                                "standard" -> {
+                                    LiquidGlassShaders.buildStandardBlurEffect(maxStandardBlurPx * lp)
+                                }
+                                "ultimate" -> {
+                                    LiquidGlassShaders.buildUltimateCapsuleEffect(
+                                        shader = lensShader,
+                                        widthPx = size.width,
+                                        heightPx = size.height,
+                                        cornerRadiusPx = size.height * 0.5f,
+                                        blurRadiusPx = 0f,
+                                        refractionPx = maxRefractionPx * lp,
+                                        dispersion = 0.72f * lp,
+                                        zoom = 0.09f * lp,
+                                        edgeBandPx = edgeBandPx,
+                                        specular = if (isDarkTheme) 0.28f else 0.42f,
+                                        fallbackColorR = backdropColor.red,
+                                        fallbackColorG = backdropColor.green,
+                                        fallbackColorB = backdropColor.blue
+                                    )
+                                }
+                                else -> null
+                            }
                             clip = true
                             shape = CircleShape
                         }
                 ) {
+                    val lp = lensProgressState.value
+                    val af = animatedFractionState.value
+                    val curThumbWidthPx = lerp(thumbRestWidthPx, thumbExpandedWidthPx, lp)
+                    val curThumbHeightPx = lerp(thumbRestHeightPx, thumbExpandedHeightPx, lp)
+                    val thumbCenterX = trackLeftPx + thumbPadPx + thumbRestWidthPx * 0.5f + af * travelPx
+                    val thumbCenterY = trackTopPx + trackHeightPx * 0.5f
+                    val thumbLeftPx = thumbCenterX - curThumbWidthPx * 0.5f
+                    val thumbTopPx = thumbCenterY - curThumbHeightPx * 0.5f
+
                     drawRect(color = backdropColor)
                     translate(
                         left = trackLeftPx - thumbLeftPx,
@@ -399,28 +427,14 @@ fun LiquidGlassSwitch(
                     ) {
                         drawLayer(trackLayer)
                     }
-                    drawRect(
-                        color = if (isDarkTheme) {
-                            Color.White.copy(alpha = if (isUltimate) 0.14f else 0.26f)
-                        } else {
-                            Color.White.copy(alpha = if (isUltimate) 0.18f else 0.34f)
-                        }
-                    )
+                    drawRect(color = thumbOverlayColor)
                 }
 
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .graphicsLayer { alpha = lensProgress }
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = if (isDarkTheme) 0.16f else 0.28f),
-                                    Color.Transparent,
-                                    Color.White.copy(alpha = if (isDarkTheme) 0.08f else 0.14f)
-                                )
-                            )
-                        )
+                        .graphicsLayer { alpha = lensProgressState.value }
+                        .background(lensGlossBrush)
                         .border(
                             width = 1.1.dp,
                             brush = lensBorderBrush,
@@ -430,12 +444,13 @@ fun LiquidGlassSwitch(
             }
 
             // Crisp resting white capsule thumb
-            val restAlpha = if (isGlassActive) (1f - lensProgress).coerceIn(0f, 1f) else 1f
-            if (restAlpha > 0.01f) {
+            if (showRestThumb) {
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .graphicsLayer { alpha = restAlpha }
+                        .graphicsLayer {
+                            alpha = if (isGlassActive) (1f - lensProgressState.value).coerceIn(0f, 1f) else 1f
+                        }
                         .background(
                             color = if (enabled) Color.White else Color.White.copy(alpha = 0.72f),
                             shape = CircleShape
@@ -448,18 +463,5 @@ fun LiquidGlassSwitch(
                 )
             }
         }
-    }
-}
-
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.translate(
-    left: Float,
-    top: Float,
-    block: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit
-) {
-    drawContext.transform.translate(left, top)
-    try {
-        block()
-    } finally {
-        drawContext.transform.translate(-left, -top)
     }
 }

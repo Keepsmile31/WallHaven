@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -49,12 +46,12 @@ import com.example.data.model.WallpaperDto
 fun WallpaperCard(
     wallpaper: WallpaperDto,
     isFavorite: Boolean,
-    onFavoriteToggle: () -> Unit,
-    onClick: () -> Unit,
+    onFavoriteToggle: (WallpaperDto) -> Unit,
+    onClick: (WallpaperDto) -> Unit,
     modifier: Modifier = Modifier,
     isSelectable: Boolean = false,
     isSelected: Boolean = false,
-    onSelectToggle: (() -> Unit)? = null,
+    onSelectToggle: ((String) -> Unit)? = null,
     showFavoritesCount: Boolean = true
 ) {
     val context = LocalContext.current
@@ -124,9 +121,9 @@ fun WallpaperCard(
             .clip(RoundedCornerShape(12.dp))
             .clickable {
                 if (isSelectable && onSelectToggle != null) {
-                    onSelectToggle()
+                    onSelectToggle(wallpaper.id)
                 } else {
-                    onClick()
+                    onClick(wallpaper)
                 }
             }
             .testTag("wallpaper_card_${wallpaper.id}")
@@ -200,7 +197,7 @@ fun WallpaperCard(
                         .align(Alignment.TopEnd)
                         .padding(6.dp)
                         .size(32.dp)
-                        .clickable { onSelectToggle?.invoke() }
+                        .clickable { onSelectToggle?.invoke(wallpaper.id) }
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
@@ -223,13 +220,15 @@ fun WallpaperCard(
                         .size(32.dp)
                 ) {
                     IconButton(
-                        onClick = onFavoriteToggle,
+                        onClick = { onFavoriteToggle(wallpaper) },
                         modifier = Modifier
                             .size(32.dp)
                             .testTag("favorite_btn_${wallpaper.id}")
                     ) {
                         Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            imageVector = ImageVector.vectorResource(
+                                if (isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
+                            ),
                             contentDescription = "Favorite",
                             tint = if (isFavorite) Color(0xFFFF4081) else Color.White,
                             modifier = Modifier.size(18.dp)
@@ -252,7 +251,7 @@ fun WallpaperCard(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Favorite,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_favorite_filled),
                             contentDescription = null,
                             tint = Color(0xFFFF5252),
                             modifier = Modifier.size(10.dp)

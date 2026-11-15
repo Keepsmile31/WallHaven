@@ -1,11 +1,7 @@
-import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
-
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
   alias(libs.plugins.google.devtools.ksp)
-  alias(libs.plugins.secrets)
-  alias(libs.plugins.google.services)
 }
 
 android {
@@ -16,8 +12,8 @@ android {
     applicationId = "com.aistudio.wallhaven"
     minSdk = 34
     targetSdk = 37
-    versionCode = 22
-    versionName = "2.5.0"
+    versionCode = 24
+    versionName = "2.6.0"
 
     ndk {
       abiFilters.clear()
@@ -82,43 +78,34 @@ android {
     includeInApk = false
     includeInBundle = true
   }
+  androidResources {
+    localeFilters += listOf("zh", "zh-rCN", "en")
+  }
   packaging {
     resources {
       excludes += setOf(
         "/META-INF/{AL2.0,LGPL2.1}",
+        "META-INF/*.version",
+        "META-INF/*.kotlin_module",
         "META-INF/versions/9/previous-compilation-data.bin",
-        "DebugProbesKt.bin"
+        "DebugProbesKt.bin",
+        "kotlin-tooling-metadata.json"
       )
     }
   }
 }
 
-// Configure the Secrets Gradle Plugin to use .env and .env.example files
-// to match the convention used in Web projects.
-secrets {
-  propertiesFileName = ".env"
-  defaultPropertiesFileName = ".env.example"
-  ignoreList.add("FIREBASE_APPCHECK_DEBUG_TOKEN")
-}
-
-googleServices { missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN }
-
 dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(libs.androidx.activity.compose)
-  implementation(libs.androidx.compose.material.icons.core)
   implementation(libs.androidx.compose.material3)
   implementation(libs.androidx.compose.ui)
-  implementation(libs.androidx.compose.ui.graphics)
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.core.splashscreen)
   implementation(libs.androidx.datastore.preferences)
   implementation(libs.androidx.lifecycle.runtime.compose)
-  implementation(libs.androidx.lifecycle.runtime.ktx)
-  implementation(libs.androidx.lifecycle.viewmodel.compose)
   implementation(libs.androidx.navigation.compose)
   implementation(libs.androidx.room.ktx)
-  implementation(libs.androidx.room.runtime)
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.kotlinx.coroutines.android)

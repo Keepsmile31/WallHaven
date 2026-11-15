@@ -77,3 +77,27 @@ interface DownloadDao {
     @Query("DELETE FROM download_history")
     suspend fun clearAll()
 }
+
+@Dao
+interface SearchHistoryDao {
+    @Query("SELECT * FROM search_history ORDER BY searchedAt DESC")
+    fun getRecentSearches(): Flow<List<SearchHistoryEntity>>
+
+    @Query("SELECT * FROM search_history ORDER BY searchedAt DESC")
+    suspend fun getAllSearchesList(): List<SearchHistoryEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSearch(entity: SearchHistoryEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAllSearches(entities: List<SearchHistoryEntity>)
+
+    @Query("DELETE FROM search_history WHERE `query` = :query")
+    suspend fun deleteSearch(query: String)
+
+    @Query("DELETE FROM search_history WHERE `query` IN (:queries)")
+    suspend fun deleteSearches(queries: List<String>)
+
+    @Query("DELETE FROM search_history")
+    suspend fun clearAll()
+}

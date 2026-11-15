@@ -6,6 +6,7 @@ import com.example.data.db.AppDatabase
 import com.example.data.db.DownloadEntity
 import com.example.data.db.FavoriteWallpaperEntity
 import com.example.data.db.HistoryEntity
+import com.example.data.db.SearchHistoryEntity
 import com.example.data.model.SearchResponse
 import com.example.data.model.WallpaperDto
 import kotlinx.coroutines.flow.Flow
@@ -118,5 +119,34 @@ class WallpaperRepository(
 
     suspend fun clearDownloads() {
         database.downloadDao().clearAll()
+    }
+
+    fun getSearchHistory(): Flow<List<SearchHistoryEntity>> =
+        database.searchHistoryDao().getRecentSearches()
+
+    suspend fun recordSearchQuery(query: String) {
+        val normalized = query.trim()
+        if (normalized.isEmpty()) return
+        database.searchHistoryDao().insertSearch(
+            SearchHistoryEntity(
+                query = normalized,
+                searchedAt = System.currentTimeMillis()
+            )
+        )
+    }
+
+    suspend fun deleteSearchHistoryItem(query: String) {
+        database.searchHistoryDao().deleteSearch(query)
+    }
+
+    suspend fun batchDeleteSearchHistory(queries: List<String>) {
+        if (queries.isEmpty()) return
+        queries.chunked(500).forEach { chunk ->
+            database.searchHistoryDao().deleteSearches(chunk)
+        }
+    }
+
+    suspend fun clearSearchHistory() {
+        database.searchHistoryDao().clearAll()
     }
 }

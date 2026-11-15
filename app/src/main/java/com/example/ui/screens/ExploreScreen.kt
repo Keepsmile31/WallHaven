@@ -1,9 +1,6 @@
 package com.example.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,58 +19,52 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.WallpaperDto
+import com.example.ui.components.ActiveFilterChip
 import com.example.ui.components.AppHeaderBar
 import com.example.ui.components.ExploreLiquidGlassFilterButton
 import com.example.ui.components.ExploreLiquidGlassTabs
 import com.example.ui.components.FilterBottomSheet
 import com.example.ui.components.FilterState
+import com.example.ui.components.RestrictedApiKeyDialog
 import com.example.ui.components.WallpaperCard
 import com.example.util.HapticHelper
 
@@ -98,14 +89,12 @@ fun ExploreScreen(
     onWallpaperClick: (WallpaperDto) -> Unit,
     onFavoriteToggle: (WallpaperDto) -> Unit,
     hapticHelper: HapticHelper,
-    showFavoritesCount: Boolean = true
+    showFavoritesCount: Boolean = true,
+    gridState: LazyStaggeredGridState = rememberLazyStaggeredGridState()
 ) {
-    val gridState = rememberLazyStaggeredGridState()
     var showFilterSheet by remember { mutableStateOf(false) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-    val context = LocalContext.current
 
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val cutoutPadding = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
@@ -120,57 +109,25 @@ fun ExploreScreen(
         }
     }
 
-    LaunchedEffect(shouldLoadMore) {
+    LaunchedEffect(shouldLoadMore, isLoading, isEndReached) {
         if (shouldLoadMore && !isLoading && !isEndReached) {
             onLoadMore()
         }
     }
 
+    var lastSubTab by rememberSaveable { mutableIntStateOf(currentSubTab) }
     LaunchedEffect(currentSubTab) {
-        if (gridState.firstVisibleItemIndex > 0) {
+        if (lastSubTab != currentSubTab) {
+            lastSubTab = currentSubTab
             gridState.scrollToItem(0)
         }
     }
 
     // API Key Dialog for Restricted Content
     if (showApiKeyDialog) {
-        AlertDialog(
-            onDismissRequest = { showApiKeyDialog = false },
-            title = { Text(stringResource(R.string.need_api_key_for_restricted_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(stringResource(R.string.need_api_key_for_restricted_msg), fontSize = 13.sp)
-                    OutlinedButton(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://1815318986.share.123pan.cn/123pan/ngLtVv-N3Fm3"))
-                            try {
-                                context.startActivity(intent)
-                            } catch (_: Exception) {}
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.size(15.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.channel_123pan), fontSize = 12.sp)
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showApiKeyDialog = false
-                        onNavigateToSettings()
-                    }
-                ) {
-                    Text(stringResource(R.string.go_to_settings))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showApiKeyDialog = false }) {
-                    Text(stringResource(R.string.action_cancel))
-                }
-            }
+        RestrictedApiKeyDialog(
+            onDismiss = { showApiKeyDialog = false },
+            onNavigateToSettings = onNavigateToSettings
         )
     }
 
@@ -247,8 +204,8 @@ fun ExploreScreen(
                 WallpaperCard(
                     wallpaper = wp,
                     isFavorite = favoriteIds.contains(wp.id),
-                    onFavoriteToggle = { onFavoriteToggle(wp) },
-                    onClick = { onWallpaperClick(wp) },
+                    onFavoriteToggle = onFavoriteToggle,
+                    onClick = onWallpaperClick,
                     showFavoritesCount = showFavoritesCount
                 )
             }
@@ -315,7 +272,11 @@ fun ExploreScreen(
                             fontSize = 14.sp
                         )
                         Button(onClick = onRetry) {
-                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_refresh),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(stringResource(R.string.action_retry))
                         }
@@ -428,61 +389,31 @@ private fun ActiveFilterChipsRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (filterState.scenes.isNotEmpty()) {
-            ActiveChip(label = "风格: ${filterState.scenes.joinToString(",")}", onRemove = { onRemove("scenes") })
+            ActiveFilterChip(label = "风格: ${filterState.scenes.joinToString(",")}", onRemove = { onRemove("scenes") })
         }
         if (filterState.ratios.isNotEmpty()) {
-            ActiveChip(label = "比例: ${filterState.ratios.joinToString(",")}", onRemove = { onRemove("ratios") })
+            ActiveFilterChip(label = "比例: ${filterState.ratios.joinToString(",")}", onRemove = { onRemove("ratios") })
         }
         if (filterState.atleast.isNotBlank()) {
-            ActiveChip(label = "门槛: ≥${filterState.atleast}", onRemove = { onRemove("atleast") })
+            ActiveFilterChip(label = "门槛: ≥${filterState.atleast}", onRemove = { onRemove("atleast") })
         }
         if (filterState.resolutions.isNotEmpty()) {
-            ActiveChip(label = "分辨率: ${filterState.resolutions.joinToString(",")}", onRemove = { onRemove("resolutions") })
+            ActiveFilterChip(label = "分辨率: ${filterState.resolutions.joinToString(",")}", onRemove = { onRemove("resolutions") })
         }
         if (filterState.color.isNotBlank()) {
-            ActiveChip(label = "色彩: #${filterState.color}", onRemove = { onRemove("color") })
+            ActiveFilterChip(label = "色彩: #${filterState.color}", onRemove = { onRemove("color") })
         }
         if (filterState.order != "desc") {
-            ActiveChip(label = "排序: 正序", onRemove = { onRemove("order") })
+            ActiveFilterChip(label = "排序: 正序", onRemove = { onRemove("order") })
         }
         if (filterState.categories != "110") {
-            ActiveChip(label = "类别定制", onRemove = { onRemove("categories") })
+            ActiveFilterChip(label = "类别定制", onRemove = { onRemove("categories") })
         }
         if (filterState.purity != "100") {
-            ActiveChip(label = "分级定制", onRemove = { onRemove("purity") })
+            ActiveFilterChip(label = "分级定制", onRemove = { onRemove("purity") })
         }
         if (isTopTab && filterState.topRange != "1M") {
-            ActiveChip(label = "周期: ${filterState.topRange}", onRemove = { onRemove("topRange") })
-        }
-    }
-}
-
-@Composable
-private fun ActiveChip(label: String, onRemove: () -> Unit) {
-    Surface(
-        shape = RoundedCornerShape(50),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
-        modifier = Modifier.clip(RoundedCornerShape(50))
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 10.dp, end = 6.dp, top = 4.dp, bottom = 4.dp)
-        ) {
-            Text(
-                text = label,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-                imageVector = Icons.Default.Clear,
-                contentDescription = "Remove filter",
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier
-                    .size(14.dp)
-                    .clickable { onRemove() }
-            )
+            ActiveFilterChip(label = "周期: ${filterState.topRange}", onRemove = { onRemove("topRange") })
         }
     }
 }

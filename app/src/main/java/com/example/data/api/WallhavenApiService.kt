@@ -41,20 +41,28 @@ interface WallhavenApiService {
 object ApiClient {
     private const val BASE_URL = "https://wallhaven.cc/"
 
+    private const val DEFAULT_USER_AGENT =
+        "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+
     val baseOkHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .dispatcher(Dispatcher().apply {
-                maxRequests = 64
-                maxRequestsPerHost = 24
+                maxRequests = 32
+                maxRequestsPerHost = 6
             })
-            .connectionPool(ConnectionPool(16, 5, TimeUnit.MINUTES))
+            .connectionPool(ConnectionPool(5, 5, TimeUnit.MINUTES))
             .retryOnConnectionFailure(true)
             .followRedirects(true)
             .followSslRedirects(true)
             .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .header("User-Agent", "Wallhaven-Android/1.0.0 (Arm64-v8a)")
-                    .build()
+                val original = chain.request()
+                val request = if (original.header("User-Agent") == null) {
+                    original.newBuilder()
+                        .header("User-Agent", DEFAULT_USER_AGENT)
+                        .build()
+                } else {
+                    original
+                }
                 chain.proceed(request)
             }
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -65,9 +73,14 @@ object ApiClient {
     val okHttpClient: OkHttpClient by lazy {
         baseOkHttpClient.newBuilder()
             .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .header("Accept", "application/json")
-                    .build()
+                val original = chain.request()
+                val request = if (original.header("Accept") == null) {
+                    original.newBuilder()
+                        .header("Accept", "application/json")
+                        .build()
+                } else {
+                    original
+                }
                 chain.proceed(request)
             }
             .build()

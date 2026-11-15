@@ -6,7 +6,8 @@
 -keep,allowobfuscation,allowshrinking @com.squareup.moshi.JsonClass class * {
     <init>(...);
 }
--keep class *JsonAdapter {
+-if @com.squareup.moshi.JsonClass class *
+-keep,allowobfuscation class <1>JsonAdapter {
     public <init>(com.squareup.moshi.Moshi);
 }
 
@@ -15,6 +16,13 @@
 
 # Room
 -keep class * extends androidx.room.RoomDatabase
+
+# Strip debug/verbose/info Log calls in release
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+}
 
 # OkHttp / Retrofit optional warnings
 -dontwarn okhttp3.**

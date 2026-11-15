@@ -40,11 +40,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -71,11 +66,13 @@ import androidx.compose.runtime.rememberCompositionContext
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -99,12 +96,24 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
 import com.example.data.model.WallpaperDto
+import com.example.util.CacheManager
 import com.example.util.DownloadStatus
 import com.example.util.HapticHelper
 import com.example.util.WallpaperSetHelper
 import com.example.util.WallpaperTarget
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+
+private val HexHashRegex = Regex("""[0-9a-fA-F]{16,}""")
+
+private fun parseWallhavenHexColor(hex: String): Color? {
+    val clean = hex.removePrefix("#")
+    return if (clean.length == 6 || clean.length == 8) {
+        clean.toLongOrNull(16)?.let { Color(if (clean.length == 6) it or 0xFF000000 else it) }
+    } else null
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -114,14 +123,17 @@ fun WallpaperDetailSheet(
     downloadStatus: DownloadStatus?,
     onFavoriteToggle: () -> Unit,
     onDownload: () -> Unit,
-    onSearchTag: (String) -> Unit,
-    onSearchColor: (String) -> Unit,
+    onSearchTag: (englishTag: String, localizedTag: String?, scrollOffset: Int) -> Unit,
+    onSearchColor: (colorHex: String, scrollOffset: Int) -> Unit,
     onDismiss: () -> Unit,
     hapticHelper: HapticHelper,
     wallpaperSetHelper: WallpaperSetHelper,
     tagTranslator: ((String) -> String?)? = null,
     tagTranslations: Map<String, String> = emptyMap(),
-    isTagLocalizationEnabled: Boolean = false
+    isTagLocalizationEnabled: Boolean = false,
+    initialScrollOffset: Int = 0,
+    onScrollRestored: () -> Unit = {},
+    isRestoredFromSearch: Boolean = false
 ) {
     if (wallpaper == null) return
 
@@ -163,37 +175,48 @@ fun WallpaperDetailSheet(
             .build()
     }
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val detailScrollState = rememberScrollState(initial = initialScrollOffset.coerceAtLeast(0))
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        dragHandle = null,
-        containerColor = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxHeight()
-    ) {
+    LaunchedEffect(wallpaper.id, initialScrollOffset) {
+        if (initialScrollOffset > 0) {
+            snapshotFlow { detailScrollState.maxValue }
+                .filter { it > 0 }
+                .first()
+            val clamped = initialScrollOffset.coerceAtMost(detailScrollState.maxValue)
+            if (detailScrollState.value != clamped) {
+                detailScrollState.scrollTo(clamped)
+            }
+            onScrollRestored()
+        }
+    }
+
+    val detailBody: @Composable () -> Unit = {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(detailScrollState)
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            // Subtle drag indicator affordance
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 4.dp),
-                contentAlignment = Alignment.Center
-            ) {
+            if (!isRestoredFromSearch) {
+                // Subtle drag indicator affordance for bottom sheet mode
                 Box(
                     modifier = Modifier
-                        .size(width = 36.dp, height = 4.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                            shape = RoundedCornerShape(2.dp)
-                        )
-                )
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 36.dp, height = 4.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                                shape = RoundedCornerShape(2.dp)
+                            )
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
             // Header Bar
@@ -223,7 +246,9 @@ fun WallpaperDetailSheet(
                         modifier = Modifier.testTag("detail_favorite_btn")
                     ) {
                         Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            imageVector = ImageVector.vectorResource(
+                                if (isFavorite) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
+                            ),
                             contentDescription = "Favorite",
                             tint = if (isFavorite) Color(0xFFFF4081) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -243,7 +268,7 @@ fun WallpaperDetailSheet(
                         modifier = Modifier.testTag("share_wallpaper_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Share,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_share),
                             contentDescription = "Share",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -254,7 +279,10 @@ fun WallpaperDetailSheet(
                         onClick = onDismiss,
                         modifier = Modifier.testTag("close_sheet_btn")
                     ) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_close),
+                            contentDescription = "Close"
+                        )
                     }
                 }
             }
@@ -262,14 +290,7 @@ fun WallpaperDetailSheet(
             // Image Preview (Uncropped) with fast progressive loading
             val fallbackColor = MaterialTheme.colorScheme.surfaceVariant
             val dominantColor = remember(wallpaper.colors) {
-                val hex = wallpaper.colors.firstOrNull()?.removePrefix("#")
-                if (!hex.isNullOrBlank()) {
-                    try {
-                        Color(android.graphics.Color.parseColor("#$hex"))
-                    } catch (_: Exception) {
-                        null
-                    }
-                } else null
+                wallpaper.colors.firstOrNull()?.let { parseWallhavenHexColor(it) }
             } ?: fallbackColor
 
             var isPreviewLoading by remember(wallpaper.id) { mutableStateOf(true) }
@@ -442,7 +463,7 @@ fun WallpaperDetailSheet(
                         MetadataItem(label = stringResource(R.string.resolution), value = wallpaper.resolution)
                         MetadataItem(
                             label = stringResource(R.string.file_size),
-                            value = formatFileSize(wallpaper.fileSize)
+                            value = CacheManager.formatBytes(wallpaper.fileSize, zeroText = "未知", mbDecimals = 2, kbDecimals = 1)
                         )
                         val localizedCategory = when (wallpaper.category.lowercase().trim()) {
                             "general" -> "常规"
@@ -473,6 +494,11 @@ fun WallpaperDetailSheet(
 
             // Extracted Colors Palette
             if (wallpaper.colors.isNotEmpty()) {
+                val parsedPalette = remember(wallpaper.colors) {
+                    wallpaper.colors.map { hex ->
+                        hex.removePrefix("#") to (parseWallhavenHexColor(hex) ?: Color.Gray)
+                    }
+                }
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                     Text(
                         text = stringResource(R.string.color_palette),
@@ -484,12 +510,7 @@ fun WallpaperDetailSheet(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.horizontalScroll(rememberScrollState())
                     ) {
-                        wallpaper.colors.forEach { hex ->
-                            val color = try {
-                                Color(android.graphics.Color.parseColor(if (hex.startsWith("#")) hex else "#$hex"))
-                            } catch (_: Exception) {
-                                Color.Gray
-                            }
+                        parsedPalette.forEach { (cleanHex, color) ->
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
@@ -498,7 +519,7 @@ fun WallpaperDetailSheet(
                                     .border(1.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), CircleShape)
                                     .clickable {
                                         hapticHelper.vibrateTick()
-                                        onSearchColor(hex.removePrefix("#"))
+                                        onSearchColor(cleanHex, detailScrollState.value)
                                     }
                             )
                         }
@@ -526,7 +547,7 @@ fun WallpaperDetailSheet(
                                 (tagTranslations[raw]
                                     ?: tagTranslations[clean]
                                     ?: tagTranslator?.invoke(tag.name))
-                                    ?.replace(Regex("""[0-9a-fA-F]{16,}"""), "")
+                                    ?.replace(HexHashRegex, "")
                                     ?.trim()
                                     ?.ifBlank { null }
                             } else null
@@ -537,10 +558,11 @@ fun WallpaperDetailSheet(
                                 modifier = Modifier
                                     .widthIn(max = 280.dp)
                                     .clip(RoundedCornerShape(10.dp))
+                                    .testTag("detail_tag_${tag.name}")
                                     .clickable {
                                         hapticHelper.vibrateTick()
-                                        // Retrieves original English tag and triggers search
-                                        onSearchTag(tag.name)
+                                        // Pass both original English tag (for API) and localized Chinese tag (for display/history) + scroll offset
+                                        onSearchTag(tag.name, chineseTranslation, detailScrollState.value)
                                     }
                             ) {
                                 Row(
@@ -591,6 +613,36 @@ fun WallpaperDetailSheet(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+
+    if (isRestoredFromSearch) {
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            event.changes.forEach { it.consume() }
+                        }
+                    }
+                }
+                .testTag("restored_detail_surface")
+        ) {
+            detailBody()
+        }
+    } else {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            dragHandle = null,
+            containerColor = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxHeight()
+        ) {
+            detailBody()
         }
     }
 
@@ -746,7 +798,7 @@ fun WallpaperDetailSheet(
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Text(
-                                text = "${wallpaper.resolution} • ${formatFileSize(wallpaper.fileSize)}",
+                                text = "${wallpaper.resolution} • ${CacheManager.formatBytes(wallpaper.fileSize, zeroText = "未知", mbDecimals = 2, kbDecimals = 1)}",
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
@@ -764,7 +816,7 @@ fun WallpaperDetailSheet(
                                 .size(36.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Close,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_close),
                                 contentDescription = "Close",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -782,17 +834,6 @@ private fun MetadataItem(label: String, value: String) {
     Column {
         Text(text = label, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
         Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-    }
-}
-
-private fun formatFileSize(bytes: Long): String {
-    if (bytes <= 0) return "未知"
-    val kb = bytes / 1024.0
-    val mb = kb / 1024.0
-    return if (mb >= 1.0) {
-        String.format("%.2f MB", mb)
-    } else {
-        String.format("%.1f KB", kb)
     }
 }
 

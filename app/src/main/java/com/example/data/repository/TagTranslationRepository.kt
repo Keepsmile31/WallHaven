@@ -91,7 +91,7 @@ class TagTranslationRepository(private val database: AppDatabase) {
         englishToChineseMap[raw]?.let { return it }
 
         // 2. Normalized without underscores, hyphens, extra whitespace
-        val cleaned = raw.replace('_', ' ').replace('-', ' ').replace(Regex("\\s+"), " ")
+        val cleaned = raw.replace('_', ' ').replace('-', ' ').replace(WHITESPACE_REGEX, " ")
         englishToChineseMap[cleaned]?.let { return it }
 
         // 3. Morphological analysis (plural -> singular)
@@ -136,33 +136,8 @@ class TagTranslationRepository(private val database: AppDatabase) {
     private fun smartCompoundTranslate(tag: String): String? {
         val tokens = tag.split(" ").filter { it.isNotBlank() }
         if (tokens.size in 2..4) {
-            val modifiers = mapOf(
-                "dark" to "深色/暗", "light" to "浅色/明亮", "blue" to "蓝", "red" to "红",
-                "black" to "黑", "white" to "白", "green" to "绿", "yellow" to "黄",
-                "purple" to "紫", "pink" to "粉", "gold" to "金", "golden" to "金色",
-                "silver" to "银", "short" to "短", "long" to "长", "night" to "夜景/夜晚",
-                "sunset" to "日落", "sunrise" to "日出", "starry" to "星空/星辰",
-                "rainy" to "雨景/雨天", "snowy" to "雪景/下雪", "autumn" to "金秋",
-                "spring" to "初春", "summer" to "盛夏", "winter" to "冬日",
-                "cyberpunk" to "赛博朋克", "futuristic" to "未来主义", "fantasy" to "奇幻",
-                "sci-fi" to "科幻", "scifi" to "科幻", "anime" to "动漫", "cute" to "萌系可爱",
-                "digital" to "数码", "pixel" to "像素", "vintage" to "复古", "retro" to "怀旧"
-            )
-
-            val nouns = mapOf(
-                "girl" to "少女", "girls" to "少女", "boy" to "少年", "boys" to "少年",
-                "hair" to "发", "eye" to "眼瞳", "eyes" to "眼眸", "dress" to "礼服连衣裙",
-                "skirt" to "短裙", "sky" to "天空", "city" to "城市", "cities" to "城市",
-                "landscape" to "风景", "scenery" to "景致", "forest" to "森林", "sea" to "大海",
-                "ocean" to "海洋", "mountain" to "山峰", "mountains" to "群山",
-                "tree" to "树木", "trees" to "林木", "flower" to "花卉", "flowers" to "鲜花",
-                "cat" to "猫咪", "cats" to "猫咪", "dog" to "狗狗", "car" to "汽车", "cars" to "跑车名车",
-                "art" to "艺术", "background" to "背景", "cloud" to "云彩", "clouds" to "白云",
-                "star" to "星辰", "stars" to "繁星", "sword" to "剑", "swords" to "双剑/利剑"
-            )
-
             val translatedTokens = tokens.map { token ->
-                englishToChineseMap[token] ?: modifiers[token] ?: nouns[token]
+                englishToChineseMap[token] ?: COMPOUND_MODIFIERS[token] ?: COMPOUND_NOUNS[token]
             }
 
             if (translatedTokens.all { it != null }) {
@@ -254,7 +229,7 @@ class TagTranslationRepository(private val database: AppDatabase) {
                 }
                 var translated = sb.toString().trim()
                 // Strict safeguard: Strip any concatenated hexadecimal hash strings (e.g. 6ffafab0da7e640be86ac09d0d5e539c)
-                translated = translated.replace(Regex("""[0-9a-fA-F]{16,}"""), "").trim()
+                translated = translated.replace(HEX_HASH_REGEX, "").trim()
 
                 if (translated.isNotBlank() && !translated.equals(englishTag, ignoreCase = true)) {
                     return translated
@@ -271,7 +246,7 @@ class TagTranslationRepository(private val database: AppDatabase) {
      */
     private fun cacheTranslation(englishTag: String, chineseName: String, persistToDb: Boolean) {
         val norm = englishTag.lowercase().trim()
-        val zh = chineseName.replace(Regex("""[0-9a-fA-F]{16,}"""), "").trim()
+        val zh = chineseName.replace(HEX_HASH_REGEX, "").trim()
         if (zh.isBlank()) return
         englishToChineseMap[norm] = zh
         chineseToEnglishMap[zh] = norm
@@ -338,6 +313,40 @@ class TagTranslationRepository(private val database: AppDatabase) {
     }
 
     /**
+     * Registers and persists an English <-> Chinese tag mapping so localized search history queries
+     * can always resolve back to the original Wallhaven English tag.
+     */
+    fun registerTranslationMapping(englishTag: String, chineseName: String) {
+        val norm = englishTag.lowercase().trim()
+        val zh = chineseName.replace(HEX_HASH_REGEX, "").trim()
+        if (norm.isBlank() || zh.isBlank()) return
+
+        val alreadyMapped = englishToChineseMap[norm] == zh && chineseToEnglishMap[zh] == norm
+        englishToChineseMap[norm] = zh
+        chineseToEnglishMap[zh] = norm
+        if (!alreadyMapped) {
+            _tagTranslations.update { current -> current + (norm to zh) }
+        }
+
+        repositoryScope.launch {
+            try {
+                if (database.tagFtsDao().findByEnglishTag(norm) == null) {
+                    database.tagFtsDao().insertAll(
+                        listOf(
+                            TagFtsEntity(
+                                rowid = 0,
+                                englishTag = norm,
+                                chineseName = zh,
+                                category = ""
+                            )
+                        )
+                    )
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    /**
      * Resolves user input: If user typed Chinese, translates to English keyword for Wallhaven API.
      * e.g. "天使" -> "angel", "经典艺术" -> "classic art"
      */
@@ -366,5 +375,60 @@ class TagTranslationRepository(private val database: AppDatabase) {
         }
 
         return trimmed
+    }
+
+    /**
+     * Resolves Chinese query using both in-memory cache and Room FTS table for persisted dynamic translations.
+     */
+    suspend fun resolveSearchQueryWithDb(query: String): String {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty()) return ""
+
+        val inMemory = resolveSearchQuery(trimmed)
+        if (!inMemory.any { it in '\u4e00'..'\u9fa5' }) {
+            return inMemory
+        }
+
+        val dbMatch = withContext(Dispatchers.IO) {
+            try {
+                database.tagFtsDao().findByChineseName(trimmed)
+            } catch (_: Exception) {
+                null
+            }
+        }
+        if (dbMatch != null && dbMatch.englishTag.isNotBlank()) {
+            chineseToEnglishMap[trimmed] = dbMatch.englishTag
+            return dbMatch.englishTag
+        }
+
+        return inMemory
+    }
+
+    private companion object {
+        val WHITESPACE_REGEX = Regex("\\s+")
+        val HEX_HASH_REGEX = Regex("""[0-9a-fA-F]{16,}""")
+        val COMPOUND_MODIFIERS = mapOf(
+            "dark" to "深色/暗", "light" to "浅色/明亮", "blue" to "蓝", "red" to "红",
+            "black" to "黑", "white" to "白", "green" to "绿", "yellow" to "黄",
+            "purple" to "紫", "pink" to "粉", "gold" to "金", "golden" to "金色",
+            "silver" to "银", "short" to "短", "long" to "长", "night" to "夜景/夜晚",
+            "sunset" to "日落", "sunrise" to "日出", "starry" to "星空/星辰",
+            "rainy" to "雨景/雨天", "snowy" to "雪景/下雪", "autumn" to "金秋",
+            "spring" to "初春", "summer" to "盛夏", "winter" to "冬日",
+            "cyberpunk" to "赛博朋克", "futuristic" to "未来主义", "fantasy" to "奇幻",
+            "sci-fi" to "科幻", "scifi" to "科幻", "anime" to "动漫", "cute" to "萌系可爱",
+            "digital" to "数码", "pixel" to "像素", "vintage" to "复古", "retro" to "怀旧"
+        )
+        val COMPOUND_NOUNS = mapOf(
+            "girl" to "少女", "girls" to "少女", "boy" to "少年", "boys" to "少年",
+            "hair" to "发", "eye" to "眼瞳", "eyes" to "眼眸", "dress" to "礼服连衣裙",
+            "skirt" to "短裙", "sky" to "天空", "city" to "城市", "cities" to "城市",
+            "landscape" to "风景", "scenery" to "景致", "forest" to "森林", "sea" to "大海",
+            "ocean" to "海洋", "mountain" to "山峰", "mountains" to "群山",
+            "tree" to "树木", "trees" to "林木", "flower" to "花卉", "flowers" to "鲜花",
+            "cat" to "猫咪", "cats" to "猫咪", "dog" to "狗狗", "car" to "汽车", "cars" to "跑车名车",
+            "art" to "艺术", "background" to "背景", "cloud" to "云彩", "clouds" to "白云",
+            "star" to "星辰", "stars" to "繁星", "sword" to "剑", "swords" to "双剑/利剑"
+        )
     }
 }

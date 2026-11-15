@@ -30,11 +30,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,6 +84,7 @@ import com.example.data.model.WallpaperDto
 import com.example.ui.components.AppHeaderBar
 import com.example.ui.components.ExploreLiquidGlassCircleButton
 import com.example.ui.components.ExploreLiquidGlassTabs
+import com.example.util.CacheManager
 import com.example.util.HapticHelper
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -101,10 +102,12 @@ fun HistoryScreen(
     onBatchDeleteDownloads: (List<String>) -> Unit,
     onClearDownloads: () -> Unit,
     onWallpaperClick: (WallpaperDto) -> Unit,
-    hapticHelper: HapticHelper? = null
+    hapticHelper: HapticHelper? = null,
+    browseListState: LazyListState = rememberLazyListState(),
+    downloadListState: LazyListState = rememberLazyListState()
 ) {
     val context = LocalContext.current
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var isBatchMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
     var showClearDialog by remember { mutableStateOf(false) }
@@ -275,6 +278,7 @@ fun HistoryScreen(
                 }
             } else {
                 LazyColumn(
+                    state = browseListState,
                     contentPadding = PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
@@ -353,6 +357,7 @@ fun HistoryScreen(
                 }
             } else {
                 LazyColumn(
+                    state = downloadListState,
                     contentPadding = PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
@@ -497,7 +502,7 @@ fun HistoryScreen(
                     )
 
                     ExploreLiquidGlassCircleButton(
-                        icon = Icons.Default.Delete,
+                        icon = ImageVector.vectorResource(R.drawable.ic_delete),
                         contentDescription = stringResource(R.string.history_clear_all),
                         tint = if (hasItemsInCurrentTab) {
                             Color(0xFFD32F2F)
@@ -560,7 +565,9 @@ fun HistoryScreen(
                             modifier = Modifier.testTag("history_select_all_btn")
                         ) {
                             Icon(
-                                imageVector = if (allSelected) Icons.Default.Close else ImageVector.vectorResource(R.drawable.ic_select_all),
+                                imageVector = ImageVector.vectorResource(
+                                    if (allSelected) R.drawable.ic_close else R.drawable.ic_select_all
+                                ),
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -589,7 +596,7 @@ fun HistoryScreen(
                                 .testTag("history_batch_clear_all_btn")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -830,7 +837,7 @@ private fun DownloadHistoryCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${item.resolution} · ${formatFileSize(item.fileSize)}",
+                    text = "${item.resolution} · ${CacheManager.formatBytes(item.fileSize, zeroText = "未知大小", mbDecimals = 1, kbDecimals = 0)}",
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -879,16 +886,5 @@ private fun DownloadHistoryCard(
                 }
             }
         }
-    }
-}
-
-private fun formatFileSize(bytes: Long): String {
-    if (bytes <= 0) return "未知大小"
-    val kb = bytes / 1024.0
-    val mb = kb / 1024.0
-    return if (mb >= 1.0) {
-        String.format(Locale.getDefault(), "%.1f MB", mb)
-    } else {
-        String.format(Locale.getDefault(), "%.0f KB", kb)
     }
 }

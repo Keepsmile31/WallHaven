@@ -102,3 +102,11 @@ data class DownloadEntity(
     val fileSize: Long,
     val downloadedAt: Long = System.currentTimeMillis()
 )
+
+@Immutable
+@JsonClass(generateAdapter = true)
+@Entity(tableName = "search_history")
+data class SearchHistoryEntity(
+    @PrimaryKey val query: String,
+    val searchedAt: Long = System.currentTimeMillis()
+)

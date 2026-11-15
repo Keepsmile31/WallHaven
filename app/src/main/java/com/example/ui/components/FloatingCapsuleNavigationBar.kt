@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -75,6 +78,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -121,7 +126,7 @@ fun FloatingCapsuleNavigationBar(
     var dragFraction by remember { mutableFloatStateOf(clampedIndex.toFloat()) }
     var lastHapticTab by remember { mutableIntStateOf(clampedIndex) }
     var lastSelectedTab by remember { mutableIntStateOf(clampedIndex) }
-    var barPosInRoot by remember { mutableStateOf(Offset.Zero) }
+    val barPosInRootState = remember { mutableStateOf(Offset.Zero) }
     var barSizePx by remember { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(clampedIndex) {
@@ -140,7 +145,7 @@ fun FloatingCapsuleNavigationBar(
     }
 
     val targetFraction = if (isDragging) dragFraction else clampedIndex.toFloat()
-    val animatedFraction by animateFloatAsState(
+    val animatedFractionState = animateFloatAsState(
         targetValue = targetFraction,
         animationSpec = if (isDragging) {
             snap()
@@ -154,7 +159,7 @@ fun FloatingCapsuleNavigationBar(
     )
 
     val isLensElevated = isDragging || isActiveSlotPressed || isTapPulsing
-    val dragProgress by animateFloatAsState(
+    val dragProgressState = animateFloatAsState(
         targetValue = if (isLensElevated) 1f else 0f,
         animationSpec = spring(
             dampingRatio = 0.74f,
@@ -164,18 +169,7 @@ fun FloatingCapsuleNavigationBar(
     )
 
     val backdropBaseColor = MaterialTheme.colorScheme.background
-
-    val lensScaleY = when (liquidGlassMode) {
-        "ultimate" -> 1f + 0.22f * dragProgress
-        "standard" -> 1f + 0.10f * dragProgress
-        else -> 1f + 0.03f * dragProgress
-    }
-    val lensScaleX = when (liquidGlassMode) {
-        "ultimate" -> 1f + 0.24f * dragProgress
-        "standard" -> 1f + 0.12f * dragProgress
-        else -> 1f + 0.04f * dragProgress
-    }
-    val lensElevation by animateDpAsState(
+    val lensElevationState = animateDpAsState(
         targetValue = if (isLensElevated) (if (isDarkTheme) 14.dp else 9.dp) else 0.dp,
         animationSpec = spring(
             dampingRatio = 0.80f,
@@ -191,8 +185,7 @@ fun FloatingCapsuleNavigationBar(
         backdropLayer.size.width > 0 &&
         backdropLayer.size.height > 0
 
-    val barShader = remember { LiquidGlassShaders.createBarShader() }
-    val lensShader = remember { LiquidGlassShaders.createLensShader() }
+    val barShader = remember { LiquidGlassShaders.createCapsuleShader() }
     val barContentLayer = rememberGraphicsLayer()
 
     val barRenderEffect = remember(
@@ -200,7 +193,8 @@ fun FloatingCapsuleNavigationBar(
         barSizePx.width,
         barSizePx.height,
         hasValidBackdrop,
-        backdropBaseColor
+        backdropBaseColor,
+        isDarkTheme
     ) {
         if (!hasValidBackdrop || barSizePx.width <= 0 || barSizePx.height <= 0) {
             null
@@ -240,6 +234,7 @@ fun FloatingCapsuleNavigationBar(
     val surfaceContainerHigh = MaterialTheme.colorScheme.surfaceContainerHigh
     val surfaceContainer = MaterialTheme.colorScheme.surfaceContainer
     val primaryColor = MaterialTheme.colorScheme.primary
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
 
     val containerAlpha = when (liquidGlassMode) {
         "none" -> if (isDarkTheme) 0.94f else 0.96f
@@ -384,7 +379,7 @@ fun FloatingCapsuleNavigationBar(
                     .widthIn(max = 520.dp)
                     .height(barHeight)
                     .onGloballyPositioned { coords ->
-                        barPosInRoot = coords.positionInRoot()
+                        barPosInRootState.value = coords.positionInRoot()
                         barSizePx = coords.size
                     }
                     .testTag("main_navigation_bar")
@@ -412,7 +407,8 @@ fun FloatingCapsuleNavigationBar(
                                 }
                         ) {
                             drawRect(color = backdropBaseColor)
-                            translate(left = -barPosInRoot.x, top = -barPosInRoot.y) {
+                            val pos = barPosInRootState.value
+                            translate(left = -pos.x, top = -pos.y) {
                                 drawLayer(backdropLayer)
                             }
                         }
@@ -449,115 +445,123 @@ fun FloatingCapsuleNavigationBar(
                         .padding(horizontal = innerPadHDp, vertical = innerPadVDp)
                 ) {
                     val itemWidthDp = maxWidth / safeCount
-                    val trackHeightDp = maxHeight
                     val trackWidthPx = with(density) { maxWidth.toPx() }.coerceAtLeast(1f)
                     val itemWidthPx = with(density) { itemWidthDp.toPx() }.coerceAtLeast(1f)
-                    val trackHeightPx = with(density) { trackHeightDp.toPx() }.coerceAtLeast(1f)
+                    val trackHeightPx = with(density) { maxHeight.toPx() }.coerceAtLeast(1f)
+
+                    val showRestingIndicator by remember(isUltimate) {
+                        derivedStateOf { !isUltimate || dragProgressState.value < 0.99f }
+                    }
+                    val showUltimateDroplet by remember(isUltimate, isLensElevated) {
+                        derivedStateOf { isUltimate && (isLensElevated || dragProgressState.value > 0.01f) }
+                    }
 
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .pointerInput(safeCount, itemWidthPx) {
-                            awaitEachGesture {
-                                val down = awaitFirstDown(requireUnconsumed = false)
-                                val velocityTracker = VelocityTracker()
-                                velocityTracker.addPosition(down.uptimeMillis, down.position)
+                                awaitEachGesture {
+                                    val down = awaitFirstDown(requireUnconsumed = false)
+                                    val velocityTracker = VelocityTracker()
+                                    velocityTracker.addPosition(down.uptimeMillis, down.position)
 
-                                val touchSlop = viewConfiguration.touchSlop
-                                val activeIndexAtDown = currentSelectedIndexState.value
-                                val pointerTabAtDown =
-                                    (down.position.x / itemWidthPx - 0.5f).coerceIn(0f, (safeCount - 1).toFloat())
-                                val nearActiveSlot = abs(pointerTabAtDown - activeIndexAtDown) <= 0.65f
-                                if (nearActiveSlot) {
-                                    isActiveSlotPressed = true
-                                }
-                                val startAnchor = if (nearActiveSlot) {
-                                    activeIndexAtDown.toFloat()
-                                } else {
-                                    pointerTabAtDown
-                                }
-
-                                var totalDx = 0f
-                                var dragStarted = false
-                                var lastPosition = down.position
-
-                                while (true) {
-                                    val event = awaitPointerEvent(PointerEventPass.Main)
-                                    val change = event.changes.firstOrNull { it.id == down.id }
-                                        ?: event.changes.firstOrNull()
-                                    if (change == null || !change.pressed) {
-                                        break
+                                    val touchSlop = viewConfiguration.touchSlop
+                                    val activeIndexAtDown = currentSelectedIndexState.value
+                                    val pointerTabAtDown =
+                                        (down.position.x / itemWidthPx - 0.5f).coerceIn(0f, (safeCount - 1).toFloat())
+                                    val nearActiveSlot = abs(pointerTabAtDown - activeIndexAtDown) <= 0.65f
+                                    if (nearActiveSlot) {
+                                        isActiveSlotPressed = true
+                                    }
+                                    val startAnchor = if (nearActiveSlot) {
+                                        activeIndexAtDown.toFloat()
+                                    } else {
+                                        pointerTabAtDown
                                     }
 
-                                    velocityTracker.addPosition(change.uptimeMillis, change.position)
-                                    val dx = change.positionChange().x
-                                    totalDx += dx
-                                    lastPosition = change.position
+                                    var totalDx = 0f
+                                    var dragStarted = false
+                                    var lastPosition = down.position
 
-                                    if (!dragStarted && abs(totalDx) > touchSlop) {
-                                        dragStarted = true
-                                        isDragging = true
-                                        lastHapticTab = activeIndexAtDown
-                                    }
+                                    while (true) {
+                                        val event = awaitPointerEvent(PointerEventPass.Main)
+                                        val change = event.changes.firstOrNull { it.id == down.id }
+                                            ?: event.changes.firstOrNull()
+                                        if (change == null || !change.pressed) {
+                                            break
+                                        }
 
-                                    if (dragStarted) {
-                                        change.consume()
-                                        val nextFraction = (startAnchor + totalDx / itemWidthPx)
-                                            .coerceIn(0f, (safeCount - 1).toFloat())
-                                        dragFraction = nextFraction
-                                        val hoveredTab = nextFraction.roundToInt().coerceIn(0, safeCount - 1)
-                                        if (hoveredTab != lastHapticTab) {
-                                            lastHapticTab = hoveredTab
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        velocityTracker.addPosition(change.uptimeMillis, change.position)
+                                        val dx = change.positionChange().x
+                                        totalDx += dx
+                                        lastPosition = change.position
+
+                                        if (!dragStarted && abs(totalDx) > touchSlop) {
+                                            dragStarted = true
+                                            isDragging = true
+                                            lastHapticTab = activeIndexAtDown
+                                        }
+
+                                        if (dragStarted) {
+                                            change.consume()
+                                            val nextFraction = (startAnchor + totalDx / itemWidthPx)
+                                                .coerceIn(0f, (safeCount - 1).toFloat())
+                                            dragFraction = nextFraction
+                                            val hoveredTab = nextFraction.roundToInt().coerceIn(0, safeCount - 1)
+                                            if (hoveredTab != lastHapticTab) {
+                                                lastHapticTab = hoveredTab
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            }
                                         }
                                     }
-                                }
 
-                                isActiveSlotPressed = false
-                                if (dragStarted) {
-                                    val velocityX = velocityTracker.calculateVelocity().x
-                                    val velocityBias = if (abs(velocityX) > 650f) {
-                                        sign(velocityX) * 0.35f
+                                    isActiveSlotPressed = false
+                                    if (dragStarted) {
+                                        val velocityX = velocityTracker.calculateVelocity().x
+                                        val velocityBias = if (abs(velocityX) > 650f) {
+                                            sign(velocityX) * 0.35f
+                                        } else {
+                                            0f
+                                        }
+                                        val targetTab = (dragFraction + velocityBias)
+                                            .roundToInt()
+                                            .coerceIn(0, safeCount - 1)
+                                        isDragging = false
+                                        if (targetTab != currentSelectedIndexState.value) {
+                                            currentOnSelectState.value(targetTab)
+                                        }
                                     } else {
-                                        0f
+                                        val tappedTab = (lastPosition.x / itemWidthPx)
+                                            .toInt()
+                                            .coerceIn(0, safeCount - 1)
+                                        isDragging = false
+                                        currentOnSelectState.value(tappedTab)
                                     }
-                                    val targetTab = (dragFraction + velocityBias)
-                                        .roundToInt()
-                                        .coerceIn(0, safeCount - 1)
-                                    isDragging = false
-                                    if (targetTab != currentSelectedIndexState.value) {
-                                        currentOnSelectState.value(targetTab)
-                                    }
-                                } else {
-                                    val tappedTab = (lastPosition.x / itemWidthPx)
-                                        .toInt()
-                                        .coerceIn(0, safeCount - 1)
-                                    isDragging = false
-                                    currentOnSelectState.value(tappedTab)
                                 }
                             }
-                        }
-                ) {
+                    ) {
                         // Resting / non-ultimate sliding capsule indicator behind items
-                        if (!isUltimate || dragProgress < 0.99f) {
-                            val restAlpha = if (isUltimate) (1f - dragProgress).coerceIn(0f, 1f) else 1f
+                        if (showRestingIndicator) {
                             val indicatorWidthPx = maxOf(itemWidthPx, trackHeightPx * 1.32f).coerceAtMost(trackWidthPx)
                             val indicatorWidthDp = with(density) { indicatorWidthPx.toDp() }
-                            val indicatorCenterPx = animatedFraction * itemWidthPx + itemWidthPx * 0.5f
-                            val indicatorLeftPx = (indicatorCenterPx - indicatorWidthPx * 0.5f)
-                                .coerceIn(0f, (trackWidthPx - indicatorWidthPx).coerceAtLeast(0f))
-
+                            val maxLeftPx = (trackWidthPx - indicatorWidthPx).coerceAtLeast(0f)
                             val indicatorGlowActive = !isUltimate && isGlassActive && isLensElevated
+
                             Box(
                                 modifier = Modifier
-                                    .offset { IntOffset(indicatorLeftPx.roundToInt(), 0) }
+                                    .offset {
+                                        val centerPx = animatedFractionState.value * itemWidthPx + itemWidthPx * 0.5f
+                                        val leftPx = (centerPx - indicatorWidthPx * 0.5f).coerceIn(0f, maxLeftPx)
+                                        IntOffset(leftPx.roundToInt(), 0)
+                                    }
                                     .width(indicatorWidthDp)
                                     .fillMaxHeight()
                                     .graphicsLayer {
-                                        alpha = restAlpha
+                                        val dpVal = dragProgressState.value
+                                        alpha = if (isUltimate) (1f - dpVal).coerceIn(0f, 1f) else 1f
                                         if (!isUltimate) {
-                                            scaleX = lensScaleX
-                                            scaleY = lensScaleY
+                                            scaleX = if (liquidGlassMode == "standard") 1f + 0.12f * dpVal else 1f + 0.04f * dpVal
+                                            scaleY = if (liquidGlassMode == "standard") 1f + 0.10f * dpVal else 1f + 0.03f * dpVal
                                         }
                                     }
                                     .clip(CircleShape)
@@ -575,7 +579,7 @@ fun FloatingCapsuleNavigationBar(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .drawWithContent {
-                                    if (isUltimate && (isLensElevated || dragProgress > 0.01f)) {
+                                    if (isUltimate && (isLensElevated || dragProgressState.value > 0.01f)) {
                                         barContentLayer.record {
                                             this@drawWithContent.drawContent()
                                         }
@@ -587,170 +591,223 @@ fun FloatingCapsuleNavigationBar(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             destinations.forEach { dest ->
-                                val proximity = (1f - abs(animatedFraction - dest.index)).coerceIn(0f, 1f)
-                                val isSelected = dest.index == clampedIndex
-                                val isActiveVisual = proximity > 0.5f
-
-                                val contentColor = lerp(
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
-                                    MaterialTheme.colorScheme.primary,
-                                    proximity
+                                NavCapsuleItem(
+                                    dest = dest,
+                                    isSelected = dest.index == clampedIndex,
+                                    isCompactScreen = isCompactScreen,
+                                    isLensElevated = isLensElevated,
+                                    animatedFractionState = animatedFractionState,
+                                    unselectedColor = onSurfaceVariant,
+                                    selectedColor = primaryColor
                                 )
-                                val itemScale = 1f + (if (isLensElevated) 0.08f else 0.02f) * proximity
-
-                                Column(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                        .padding(horizontal = 2.dp)
-                                        .graphicsLayer {
-                                            scaleX = itemScale
-                                            scaleY = itemScale
-                                        }
-                                        .semantics {
-                                            role = Role.Tab
-                                            selected = isSelected
-                                        }
-                                        .testTag(dest.testTag),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isActiveVisual) dest.selectedIcon else dest.unselectedIcon,
-                                        contentDescription = dest.label,
-                                        tint = contentColor,
-                                        modifier = Modifier.size(if (isCompactScreen) 20.dp else 22.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = dest.label,
-                                        fontSize = if (isCompactScreen) 10.sp else 10.5.sp,
-                                        lineHeight = if (isCompactScreen) 11.sp else 12.sp,
-                                        fontWeight = if (isActiveVisual) FontWeight.SemiBold else FontWeight.Medium,
-                                        color = contentColor,
-                                        maxLines = 1,
-                                        softWrap = false,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
                             }
                         }
 
                         // Ultimate Liquid Glass Droplet Lens Overlay while swiping/lifting
-                        if (isUltimate && (isLensElevated || dragProgress > 0.01f)) {
-                            val lensHeightPx = trackHeightPx * lensScaleY
-                            val minCapsuleWidthPx = lensHeightPx * (1f + 0.44f * dragProgress)
-                            val lensWidthPx = maxOf(itemWidthPx * lensScaleX, minCapsuleWidthPx)
-
-                            // Center the expanded droplet capsule symmetrically over the animated slot
-                            val lensLeftPx = animatedFraction * itemWidthPx - (lensWidthPx - itemWidthPx) * 0.5f
-                            val lensTopPx = -(lensHeightPx - trackHeightPx) * 0.5f
-
-                            val lensRenderEffect = remember(
-                                lensWidthPx,
-                                lensHeightPx,
-                                dragProgress,
-                                isDarkTheme,
-                                backdropBaseColor
-                            ) {
-                                val refractionPx = with(density) { (18.dp * dragProgress).toPx() }
-                                val edgeBandPx = with(density) { 15.dp.toPx() }
-                                LiquidGlassShaders.buildUltimateCapsuleEffect(
-                                    shader = lensShader,
-                                    widthPx = lensWidthPx,
-                                    heightPx = lensHeightPx,
-                                    cornerRadiusPx = lensHeightPx * 0.5f,
-                                    blurRadiusPx = 0f,
-                                    refractionPx = refractionPx,
-                                    dispersion = 0.58f * dragProgress,
-                                    zoom = 0.08f * dragProgress,
-                                    edgeBandPx = edgeBandPx,
-                                    specular = if (isDarkTheme) 0.24f else 0.34f,
-                                    fallbackColorR = backdropBaseColor.red,
-                                    fallbackColorG = backdropBaseColor.green,
-                                    fallbackColorB = backdropBaseColor.blue
-                                )
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .layout { measurable, _ ->
-                                        val w = lensWidthPx.roundToInt().coerceAtLeast(1)
-                                        val h = lensHeightPx.roundToInt().coerceAtLeast(1)
-                                        val placeable = measurable.measure(Constraints.fixed(w, h))
-                                        layout(0, 0) {
-                                            placeable.place(
-                                                x = lensLeftPx.roundToInt(),
-                                                y = lensTopPx.roundToInt()
-                                            )
-                                        }
-                                    }
-                                    .graphicsLayer {
-                                        alpha = dragProgress.coerceIn(0f, 1f)
-                                    }
-                                    .shadow(
-                                        elevation = lensElevation,
-                                        shape = CircleShape,
-                                        ambientColor = Color.Black.copy(alpha = if (isDarkTheme) 0.50f else 0.08f),
-                                        spotColor = Color.Black.copy(alpha = if (isDarkTheme) 0.58f else 0.14f)
-                                    )
-                                    .clip(CircleShape)
-                            ) {
-                                Canvas(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .graphicsLayer {
-                                            renderEffect = lensRenderEffect
-                                            clip = true
-                                            shape = CircleShape
-                                        }
-                                ) {
-                                    // 0. Opaque base color prevents dark/transparent shadow bleed in Light Mode
-                                    drawRect(color = backdropBaseColor)
-
-                                    // 1. Refracted screen content directly underneath the expanded lens
-                                    if (backdropLayer != null && backdropLayer.size.width > 0 && backdropLayer.size.height > 0) {
-                                        translate(
-                                            left = -(barPosInRoot.x + innerPadHPx + lensLeftPx),
-                                            top = -(barPosInRoot.y + innerPadVPx + lensTopPx)
-                                        ) {
-                                            drawLayer(backdropLayer)
-                                        }
-                                    }
-
-                                    // 2. Subtle crystal-clear glass tint inside the lens so underlying bar & items refract sharply
-                                    drawRect(
-                                        color = if (isDarkTheme) {
-                                            Color(0xFF202229).copy(alpha = 0.22f)
-                                        } else {
-                                            Color.White.copy(alpha = 0.18f)
-                                        }
-                                    )
-
-                                    // 3. Bar icons & labels underneath the lens, refracted by the same droplet shader
-                                    if (barContentLayer.size.width > 0 && barContentLayer.size.height > 0) {
-                                        translate(left = -lensLeftPx, top = -lensTopPx) {
-                                            drawLayer(barContentLayer)
-                                        }
-                                    }
-                                }
-
-                                // Subtle top gloss & iridescent glass rim
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(draggingTintOverlayBrush)
-                                        .border(
-                                            width = 1.4.dp,
-                                            brush = draggingBorderBrush,
-                                            shape = CircleShape
-                                        )
-                                )
-                            }
+                        if (showUltimateDroplet) {
+                            NavDropletLensOverlay(
+                                itemWidthPx = itemWidthPx,
+                                trackHeightPx = trackHeightPx,
+                                innerPadHPx = innerPadHPx,
+                                innerPadVPx = innerPadVPx,
+                                isDarkTheme = isDarkTheme,
+                                backdropBaseColor = backdropBaseColor,
+                                backdropLayer = backdropLayer,
+                                barContentLayer = barContentLayer,
+                                barPosInRootState = barPosInRootState,
+                                animatedFractionState = animatedFractionState,
+                                dragProgressState = dragProgressState,
+                                lensElevationState = lensElevationState,
+                                draggingTintOverlayBrush = draggingTintOverlayBrush,
+                                draggingBorderBrush = draggingBorderBrush,
+                                density = density
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RowScope.NavCapsuleItem(
+    dest: NavBarDestination,
+    isSelected: Boolean,
+    isCompactScreen: Boolean,
+    isLensElevated: Boolean,
+    animatedFractionState: State<Float>,
+    unselectedColor: Color,
+    selectedColor: Color
+) {
+    val proximityState = remember(dest.index) {
+        derivedStateOf { (1f - abs(animatedFractionState.value - dest.index)).coerceIn(0f, 1f) }
+    }
+    val isActiveVisual by remember(dest.index) {
+        derivedStateOf { abs(animatedFractionState.value - dest.index) < 0.5f }
+    }
+    val proximity = proximityState.value
+    val contentColor = lerp(unselectedColor, selectedColor, proximity)
+
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .padding(horizontal = 2.dp)
+            .graphicsLayer {
+                val scale = 1f + (if (isLensElevated) 0.08f else 0.02f) * proximityState.value
+                scaleX = scale
+                scaleY = scale
+            }
+            .semantics {
+                role = Role.Tab
+                selected = isSelected
+            }
+            .testTag(dest.testTag),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = if (isActiveVisual) dest.selectedIcon else dest.unselectedIcon,
+            contentDescription = dest.label,
+            tint = contentColor,
+            modifier = Modifier.size(if (isCompactScreen) 20.dp else 22.dp)
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = dest.label,
+            fontSize = if (isCompactScreen) 10.sp else 10.5.sp,
+            lineHeight = if (isCompactScreen) 11.sp else 12.sp,
+            fontWeight = if (isActiveVisual) FontWeight.SemiBold else FontWeight.Medium,
+            color = contentColor,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+private fun NavDropletLensOverlay(
+    itemWidthPx: Float,
+    trackHeightPx: Float,
+    innerPadHPx: Float,
+    innerPadVPx: Float,
+    isDarkTheme: Boolean,
+    backdropBaseColor: Color,
+    backdropLayer: GraphicsLayer?,
+    barContentLayer: GraphicsLayer,
+    barPosInRootState: State<Offset>,
+    animatedFractionState: State<Float>,
+    dragProgressState: State<Float>,
+    lensElevationState: State<Dp>,
+    draggingTintOverlayBrush: Brush,
+    draggingBorderBrush: Brush,
+    density: Density
+) {
+    val lensShader = remember { LiquidGlassShaders.createCapsuleShader() }
+    val ambientShadow = Color.Black.copy(alpha = if (isDarkTheme) 0.50f else 0.08f)
+    val spotShadow = Color.Black.copy(alpha = if (isDarkTheme) 0.58f else 0.14f)
+    val overlayTint = if (isDarkTheme) {
+        Color(0xFF202229).copy(alpha = 0.22f)
+    } else {
+        Color.White.copy(alpha = 0.18f)
+    }
+    val edgeBandPx = remember(density) { with(density) { 15.dp.toPx() } }
+    val maxRefractionPx = remember(density) { with(density) { 18.dp.toPx() } }
+
+    Box(
+        modifier = Modifier
+            .layout { measurable, _ ->
+                val dpVal = dragProgressState.value
+                val lScaleY = 1f + 0.22f * dpVal
+                val lScaleX = 1f + 0.24f * dpVal
+                val lensHeightPx = trackHeightPx * lScaleY
+                val lensWidthPx = maxOf(itemWidthPx * lScaleX, lensHeightPx * (1f + 0.44f * dpVal))
+                val lensLeftPx = animatedFractionState.value * itemWidthPx - (lensWidthPx - itemWidthPx) * 0.5f
+                val lensTopPx = -(lensHeightPx - trackHeightPx) * 0.5f
+
+                val w = lensWidthPx.roundToInt().coerceAtLeast(1)
+                val h = lensHeightPx.roundToInt().coerceAtLeast(1)
+                val placeable = measurable.measure(Constraints.fixed(w, h))
+                layout(0, 0) {
+                    placeable.place(
+                        x = lensLeftPx.roundToInt(),
+                        y = lensTopPx.roundToInt()
+                    )
+                }
+            }
+            .graphicsLayer {
+                alpha = dragProgressState.value.coerceIn(0f, 1f)
+                shadowElevation = lensElevationState.value.toPx()
+                shape = CircleShape
+                clip = true
+                ambientShadowColor = ambientShadow
+                spotShadowColor = spotShadow
+            }
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    val dpVal = dragProgressState.value
+                    renderEffect = LiquidGlassShaders.buildUltimateCapsuleEffect(
+                        shader = lensShader,
+                        widthPx = size.width,
+                        heightPx = size.height,
+                        cornerRadiusPx = size.height * 0.5f,
+                        blurRadiusPx = 0f,
+                        refractionPx = maxRefractionPx * dpVal,
+                        dispersion = 0.58f * dpVal,
+                        zoom = 0.08f * dpVal,
+                        edgeBandPx = edgeBandPx,
+                        specular = if (isDarkTheme) 0.24f else 0.34f,
+                        fallbackColorR = backdropBaseColor.red,
+                        fallbackColorG = backdropBaseColor.green,
+                        fallbackColorB = backdropBaseColor.blue
+                    )
+                    clip = true
+                    shape = CircleShape
+                }
+        ) {
+            val dpVal = dragProgressState.value
+            val lScaleY = 1f + 0.22f * dpVal
+            val lScaleX = 1f + 0.24f * dpVal
+            val lensHeightPx = trackHeightPx * lScaleY
+            val lensWidthPx = maxOf(itemWidthPx * lScaleX, lensHeightPx * (1f + 0.44f * dpVal))
+            val lensLeftPx = animatedFractionState.value * itemWidthPx - (lensWidthPx - itemWidthPx) * 0.5f
+            val lensTopPx = -(lensHeightPx - trackHeightPx) * 0.5f
+            val pos = barPosInRootState.value
+
+            drawRect(color = backdropBaseColor)
+
+            if (backdropLayer != null && backdropLayer.size.width > 0 && backdropLayer.size.height > 0) {
+                translate(
+                    left = -(pos.x + innerPadHPx + lensLeftPx),
+                    top = -(pos.y + innerPadVPx + lensTopPx)
+                ) {
+                    drawLayer(backdropLayer)
+                }
+            }
+
+            drawRect(color = overlayTint)
+
+            if (barContentLayer.size.width > 0 && barContentLayer.size.height > 0) {
+                translate(left = -lensLeftPx, top = -lensTopPx) {
+                    drawLayer(barContentLayer)
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(draggingTintOverlayBrush)
+                .border(
+                    width = 1.4.dp,
+                    brush = draggingBorderBrush,
+                    shape = CircleShape
+                )
+        )
     }
 }

@@ -22,9 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,7 +65,9 @@ import com.example.data.webdav.WebDavClient
 import com.example.ui.components.LiquidGlassSwitch
 import com.example.util.BugLogManager
 import com.example.util.HapticHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 internal fun SettingsBackupScreen(
@@ -124,7 +123,7 @@ internal fun SettingsBackupScreen(
                         val summary = res.getOrNull()
                         hapticHelper.vibrateSuccess(settings.hapticFeedback)
                         val msg = if (summary != null) {
-                            "恢复成功！已还原 ${summary.favoritesCount} 个收藏，${summary.historyCount} 条历史记录"
+                            "恢复成功！已还原 ${summary.favoritesCount} 个收藏、${summary.historyCount} 条浏览历史、${summary.searchHistoryCount} 条搜索记录"
                         } else {
                             "本地备份数据已成功导入！"
                         }
@@ -181,7 +180,7 @@ internal fun SettingsBackupScreen(
             M3SettingsItemRow(
                 icon = ImageVector.vectorResource(R.drawable.ic_cloud_upload),
                 title = "立即备份至云端",
-                subtitle = if (isBackingUpToWebDav) "正在上传备份至 WebDAV 云端..." else "将收藏、历史记录与偏好设置即时上传至云端",
+                subtitle = if (isBackingUpToWebDav) "正在上传备份至 WebDAV 云端..." else "将收藏、浏览/搜索历史与偏好设置即时上传至云端",
                 enabled = !isBackingUpToWebDav,
                 onClick = {
                     if (settings.webDavUrl.isBlank()) {
@@ -311,7 +310,7 @@ internal fun SettingsBackupScreen(
         AlertDialog(
             onDismissRequest = { showWebDavRestoreConfirmDialog = false },
             title = { Text("从 WebDAV 恢复备份") },
-            text = { Text("将从 WebDAV 云端下载并恢复备份数据（包含收藏、历史、下载记录与偏好设置）。本地已有记录将予以保留合并。是否确认执行？") },
+            text = { Text("将从 WebDAV 云端下载并恢复备份数据（包含收藏、浏览/下载/搜索历史与偏好设置）。本地已有记录将予以保留合并。是否确认执行？") },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -324,7 +323,7 @@ internal fun SettingsBackupScreen(
                                 val summary = res.getOrNull()
                                 hapticHelper.vibrateSuccess(settings.hapticFeedback)
                                 val msg = if (summary != null) {
-                                    "恢复成功！已还原 ${summary.favoritesCount} 个收藏，${summary.historyCount} 条历史记录"
+                                    "恢复成功！已还原 ${summary.favoritesCount} 个收藏、${summary.historyCount} 条浏览历史、${summary.searchHistoryCount} 条搜索记录"
                                 } else {
                                     "恢复成功！已还原设置和记录"
                                 }
@@ -357,15 +356,16 @@ private fun WebDavConfigDialog(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var urlInput by remember(settings.webDavUrl) { mutableStateOf(settings.webDavUrl) }
-    var userInput by remember(settings.webDavUsername) { mutableStateOf(settings.webDavUsername) }
-    var passInput by remember(settings.webDavPassword) { mutableStateOf(settings.webDavPassword) }
-    var pathInput by remember(settings.webDavPath) { mutableStateOf(settings.webDavPath) }
-    var autoBackupInput by remember(settings.webDavAutoBackup) { mutableStateOf(settings.webDavAutoBackup) }
+    var urlInput by remember { mutableStateOf(settings.webDavUrl) }
+    var userInput by remember { mutableStateOf(settings.webDavUsername) }
+    var passInput by remember { mutableStateOf(settings.webDavPassword) }
+    var pathInput by remember { mutableStateOf(settings.webDavPath) }
+    var autoBackupInput by remember { mutableStateOf(settings.webDavAutoBackup) }
     var isTesting by remember { mutableStateOf(false) }
+    var isSaving by remember { mutableStateOf(false) }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!isSaving) onDismiss() },
         title = { Text("WebDAV 服务器设置") },
         text = {
             Column(
@@ -404,7 +404,7 @@ private fun WebDavConfigDialog(
                     label = { Text("远程备份路径") },
                     placeholder = { Text("/wallhaven_backup/") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().testTag("webdav_path_input")
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -439,7 +439,7 @@ private fun WebDavConfigDialog(
                             }
                         }
                     },
-                    enabled = !isTesting && urlInput.isNotBlank(),
+                    enabled = !isTesting && !isSaving && urlInput.isNotBlank(),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     if (isTesting) {
@@ -454,26 +454,40 @@ private fun WebDavConfigDialog(
         },
         confirmButton = {
             Button(
+                enabled = !isSaving,
                 onClick = {
+                    isSaving = true
                     scope.launch {
-                        preferencesManager.setWebDavConfig(
-                            url = urlInput.trim(),
-                            user = userInput.trim(),
-                            pass = passInput,
-                            path = pathInput.trim(),
-                            autoBackup = autoBackupInput
-                        )
+                        try {
+                            preferencesManager.setWebDavConfig(
+                                url = urlInput.trim(),
+                                user = userInput.trim(),
+                                pass = passInput,
+                                path = pathInput.trim(),
+                                autoBackup = autoBackupInput
+                            )
+                            withContext(Dispatchers.Main) {
+                                hapticHelper.vibrateSuccess(settings.hapticFeedback)
+                                Toast.makeText(context, "WebDAV 配置已保存", Toast.LENGTH_SHORT).show()
+                                onDismiss()
+                            }
+                        } finally {
+                            withContext(Dispatchers.Main) {
+                                isSaving = false
+                            }
+                        }
                     }
-                    hapticHelper.vibrateSuccess(settings.hapticFeedback)
-                    Toast.makeText(context, "WebDAV 配置已保存", Toast.LENGTH_SHORT).show()
-                    onDismiss()
-                }
+                },
+                modifier = Modifier.testTag("webdav_save_btn")
             ) {
                 Text(stringResource(R.string.action_save))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                enabled = !isSaving,
+                onClick = onDismiss
+            ) {
                 Text(stringResource(R.string.action_cancel))
             }
         }
@@ -605,7 +619,7 @@ internal fun SettingsAboutScreen(
         M3SettingsSectionTitle(title = "条款与支持", icon = ImageVector.vectorResource(R.drawable.ic_description))
         M3SettingsCard {
             M3SettingsItemRow(
-                icon = Icons.Default.Info,
+                icon = ImageVector.vectorResource(R.drawable.ic_info),
                 title = stringResource(R.string.about_wallhaven_entry),
                 subtitle = "应用介绍与开源说明",
                 onClick = { showAboutDialog = true }
@@ -714,7 +728,7 @@ internal fun SettingsAboutScreen(
                             .testTag("export_debug_logs_btn")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Share,
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_share),
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )

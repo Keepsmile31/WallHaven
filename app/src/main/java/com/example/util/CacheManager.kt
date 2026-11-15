@@ -58,15 +58,21 @@ object CacheManager {
         return success
     }
 
-    fun formatBytes(bytes: Long): String {
-        if (bytes <= 0L) return "0 KB"
+    fun formatBytes(
+        bytes: Long,
+        zeroText: String = "0 KB",
+        mbDecimals: Int = 1,
+        kbDecimals: Int = 1
+    ): String {
+        if (bytes <= 0L) return zeroText
         val kb = bytes / 1024.0
         val mb = kb / 1024.0
         val gb = mb / 1024.0
+        val locale = Locale.getDefault()
         return when {
-            gb >= 1.0 -> String.format(Locale.getDefault(), "%.2f GB", gb)
-            mb >= 1.0 -> String.format(Locale.getDefault(), "%.1f MB", mb)
-            else -> String.format(Locale.getDefault(), "%.1f KB", kb)
+            gb >= 1.0 -> String.format(locale, "%.2f GB", gb)
+            mb >= 1.0 -> String.format(locale, "%.${mbDecimals}f MB", mb)
+            else -> String.format(locale, "%.${kbDecimals}f KB", kb)
         }
     }
 }

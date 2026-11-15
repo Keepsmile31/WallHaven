@@ -8,6 +8,7 @@ import com.example.data.db.AppDatabase
 import com.example.data.db.DownloadEntity
 import com.example.data.db.FavoriteWallpaperEntity
 import com.example.data.db.HistoryEntity
+import com.example.data.db.SearchHistoryEntity
 import com.example.data.model.WallpaperDto
 import com.example.data.preferences.FilterMode
 import com.example.data.preferences.AppSettings
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
@@ -52,6 +54,12 @@ enum class TabType(val id: Int) {
         }
     }
 }
+
+data class DetailReturnEntry(
+    val wallpaper: WallpaperDto,
+    val returnTab: Int,
+    val scrollOffset: Int
+)
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -100,7 +108,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val exploreError = _exploreError.asStateFlow()
 
     private var explorePage = 1
-    private var isExploreEndReached = false
+    private val _isExploreEndReached = MutableStateFlow(false)
+    val isExploreEndReached = _isExploreEndReached.asStateFlow()
 
     // Search State
     private val _searchQuery = MutableStateFlow("")
@@ -128,11 +137,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val searchError = _searchError.asStateFlow()
 
     private var searchPage = 1
-    private var isSearchEndReached = false
+    private val _isSearchEndReached = MutableStateFlow(false)
+    val isSearchEndReached = _isSearchEndReached.asStateFlow()
 
     // Detail Sheet State
     private val _selectedWallpaper = MutableStateFlow<WallpaperDto?>(null)
     val selectedWallpaper = _selectedWallpaper.asStateFlow()
+
+    private val _detailReturnStack = MutableStateFlow<List<DetailReturnEntry>>(emptyList())
+    val detailReturnStack = _detailReturnStack.asStateFlow()
+
+    private val _pendingDetailScrollOffset = MutableStateFlow(0)
+    val pendingDetailScrollOffset = _pendingDetailScrollOffset.asStateFlow()
+
+    private val _isRestoredFromDetailReturn = MutableStateFlow(false)
+    val isRestoredFromDetailReturn = _isRestoredFromDetailReturn.asStateFlow()
+
+    val settings: StateFlow<AppSettings> = preferencesManager.settingsFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
+
+    val isSearchActive: StateFlow<Boolean> = combine(
+        _searchQuery,
+        _searchResults,
+        _isSearchLoading,
+        _searchError,
+        _selectedSearchColor
+    ) { query, results, loading, error, color ->
+        query.isNotEmpty() || results.isNotEmpty() || loading || error != null || color.isNotBlank()
+    }.combine(_searchFilterState) { baseActive, filter ->
+        baseActive to filter
+    }.combine(settings) { (baseActive, filter), currentSettings ->
+        baseActive || (currentSettings.filterMode != FilterMode.GLOBAL_SHARED && filter.hasActiveFilters(isSearch = true))
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     // Local DB Flows
     val favorites: StateFlow<List<FavoriteWallpaperEntity>> = repository.getFavorites()
@@ -149,8 +185,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val downloadHistory: StateFlow<List<DownloadEntity>> = repository.getDownloads()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val settings: StateFlow<AppSettings> = preferencesManager.settingsFlow
-        .stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
+    val searchHistory: StateFlow<List<SearchHistoryEntity>> = repository.getSearchHistory()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val downloadStatusMap: StateFlow<Map<String, DownloadStatus>> = downloadManager.downloadStatusMap
     val isBatchDownloading: StateFlow<Boolean> = downloadManager.isBatchDownloading
@@ -224,7 +260,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun selectTab(tab: Int) {
+    fun selectTab(tab: Int, clearDetailReturn: Boolean = true) {
+        if (clearDetailReturn && _detailReturnStack.value.isNotEmpty()) {
+            _detailReturnStack.value = emptyList()
+        }
         _currentTab.value = tab
     }
 
@@ -327,12 +366,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (reset) {
             exploreJob?.cancel()
             explorePage = 1
-            isExploreEndReached = false
+            _isExploreEndReached.value = false
             _exploreError.value = null
             // Do not clear _exploreWallpapers immediately if it already has items
             // Keeping previous items while isExploreLoading is true prevents screen blanking
         } else {
-            if (_isExploreLoading.value || isExploreEndReached) return
+            if (_isExploreLoading.value || _isExploreEndReached.value) return
         }
 
         exploreJob = viewModelScope.launch {
@@ -384,7 +423,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val lastPage = response.meta?.lastPage ?: 1
                 if (explorePage >= lastPage || newItems.isEmpty()) {
-                    isExploreEndReached = true
+                    _isExploreEndReached.value = true
                 } else {
                     explorePage++
                 }
@@ -402,7 +441,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun onSearchQueryChange(query: String) {
         _searchQuery.value = query
         suggestionsJob?.cancel()
-        if (query.isBlank() || !settings.value.tagLocalization) {
+        if (query.isEmpty()) {
+            searchJob?.cancel()
+            _tagSuggestions.value = emptyList()
+            _isSearchLoading.value = false
+            _searchError.value = null
+            _searchResults.value = emptyList()
+            _isSearchEndReached.value = false
+            searchPage = 1
+        } else if (query.isBlank() || !settings.value.tagLocalization) {
             _tagSuggestions.value = emptyList()
         } else {
             suggestionsJob = viewModelScope.launch {
@@ -411,10 +458,59 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun clearSearch() {
+        searchJob?.cancel()
+        suggestionsJob?.cancel()
+        _searchQuery.value = ""
+        _tagSuggestions.value = emptyList()
+        _isSearchLoading.value = false
+        _searchError.value = null
+        _searchResults.value = emptyList()
+        _isSearchEndReached.value = false
+        searchPage = 1
+    }
+
+    fun exitSearchToSearchHome() {
+        clearSearch()
+        _selectedSearchColor.value = ""
+        if (settings.value.filterMode != FilterMode.GLOBAL_SHARED) {
+            val defaultSearch = defaultFilterForTab(TabType.SEARCH)
+            _tabFilters[TabType.SEARCH] = defaultSearch
+            _searchFilterState.value = defaultSearch
+        }
+    }
+
     fun selectTagSuggestion(suggestion: TagSuggestion) {
         _searchQuery.value = suggestion.englishTag
         _tagSuggestions.value = emptyList()
         performSearch(reset = true)
+    }
+
+    fun selectSearchHistory(query: String) {
+        _searchQuery.value = query
+        _tagSuggestions.value = emptyList()
+        performSearch(reset = true)
+    }
+
+    fun deleteSearchHistoryItem(query: String) {
+        viewModelScope.launch {
+            repository.deleteSearchHistoryItem(query)
+            hapticHelper.vibrateClick(settings.value.hapticFeedback)
+        }
+    }
+
+    fun batchDeleteSearchHistory(queries: List<String>) {
+        viewModelScope.launch {
+            repository.batchDeleteSearchHistory(queries)
+            hapticHelper.vibrateSuccess(settings.value.hapticFeedback)
+        }
+    }
+
+    fun clearSearchHistory() {
+        viewModelScope.launch {
+            repository.clearSearchHistory()
+            hapticHelper.vibrateSuccess(settings.value.hapticFeedback)
+        }
     }
 
     fun clearTagSuggestions() {
@@ -460,36 +556,130 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         performSearch(reset = true)
     }
 
-    fun performSearch(reset: Boolean = true) {
+    fun searchFromDetailTag(
+        englishTag: String,
+        localizedTag: String?,
+        detailScrollOffset: Int
+    ) {
+        val currentWallpaper = _selectedWallpaper.value
+        if (currentWallpaper != null) {
+            _detailReturnStack.value = _detailReturnStack.value + DetailReturnEntry(
+                wallpaper = currentWallpaper,
+                returnTab = _currentTab.value,
+                scrollOffset = detailScrollOffset.coerceAtLeast(0)
+            )
+        }
+        _pendingDetailScrollOffset.value = 0
+        _isRestoredFromDetailReturn.value = false
+        _selectedWallpaper.value = null
+        _currentTab.value = 1
+
+        val isLocalized = settings.value.tagLocalization
+        val resolvedChinese = if (isLocalized) {
+            localizedTag?.trim()?.ifBlank { null }
+                ?: tagTranslationRepository.translateToChinese(englishTag)
+        } else {
+            null
+        }
+
+        if (resolvedChinese != null) {
+            tagTranslationRepository.registerTranslationMapping(
+                englishTag = englishTag,
+                chineseName = resolvedChinese
+            )
+        }
+
+        suggestionsJob?.cancel()
+        _searchQuery.value = resolvedChinese ?: englishTag
+        _tagSuggestions.value = emptyList()
+        performSearch(reset = true, resolvedQueryOverride = englishTag)
+    }
+
+    fun searchFromDetailColor(colorHex: String, detailScrollOffset: Int) {
+        val currentWallpaper = _selectedWallpaper.value
+        if (currentWallpaper != null) {
+            _detailReturnStack.value = _detailReturnStack.value + DetailReturnEntry(
+                wallpaper = currentWallpaper,
+                returnTab = _currentTab.value,
+                scrollOffset = detailScrollOffset.coerceAtLeast(0)
+            )
+        }
+        _pendingDetailScrollOffset.value = 0
+        _isRestoredFromDetailReturn.value = false
+        _selectedWallpaper.value = null
+        _currentTab.value = 1
+        _selectedSearchColor.value = colorHex
+        performSearch(reset = true)
+    }
+
+    fun navigateBackFromDetailReturn() {
+        val stack = _detailReturnStack.value
+        val entry = stack.lastOrNull() ?: return
+        _detailReturnStack.value = stack.dropLast(1)
+        _currentTab.value = entry.returnTab
+        _pendingDetailScrollOffset.value = entry.scrollOffset.coerceAtLeast(0)
+        _isRestoredFromDetailReturn.value = true
+        _selectedWallpaper.value = entry.wallpaper
+        if (settings.value.tagLocalization && entry.wallpaper.tags.isNotEmpty()) {
+            viewModelScope.launch {
+                tagTranslationRepository.prefetchTranslations(entry.wallpaper.tags.map { it.name })
+            }
+        }
+    }
+
+    fun consumePendingDetailScroll() {
+        _pendingDetailScrollOffset.value = 0
+    }
+
+    fun performSearch(reset: Boolean = true, resolvedQueryOverride: String? = null) {
         _tagSuggestions.value = emptyList()
         val rawQuery = _searchQuery.value.trim()
-        val resolvedQuery = if (settings.value.tagLocalization) {
-            tagTranslationRepository.resolveSearchQuery(rawQuery)
-        } else {
-            rawQuery
+        val initialResolvedQuery = when {
+            !resolvedQueryOverride.isNullOrBlank() -> resolvedQueryOverride.trim()
+            settings.value.tagLocalization -> tagTranslationRepository.resolveSearchQuery(rawQuery)
+            else -> rawQuery
         }
         val filter = _searchFilterState.value
-        val hasCriteria = resolvedQuery.isNotBlank() ||
+        val hasCriteria = initialResolvedQuery.isNotBlank() ||
+                rawQuery.isNotBlank() ||
                 _selectedSearchColor.value.isNotBlank() ||
                 filter.hasActiveFilters(isSearch = true)
 
-        if (!hasCriteria && _searchResults.value.isEmpty()) {
+        if (!hasCriteria) {
+            searchJob?.cancel()
+            _isSearchLoading.value = false
+            _searchError.value = null
+            _searchResults.value = emptyList()
+            _isSearchEndReached.value = false
+            searchPage = 1
             return
         }
 
         if (reset) {
             searchJob?.cancel()
             searchPage = 1
-            isSearchEndReached = false
+            _isSearchEndReached.value = false
             _searchError.value = null
+            if (rawQuery.isNotBlank()) {
+                viewModelScope.launch {
+                    repository.recordSearchQuery(rawQuery)
+                }
+            }
             // Do not clear _searchResults immediately if it already has items
         } else {
-            if (_isSearchLoading.value || isSearchEndReached) return
+            if (_isSearchLoading.value || _isSearchEndReached.value) return
         }
 
         searchJob = viewModelScope.launch {
             _isSearchLoading.value = true
             _searchError.value = null
+            val resolvedQuery = if (!resolvedQueryOverride.isNullOrBlank()) {
+                resolvedQueryOverride.trim()
+            } else if (settings.value.tagLocalization) {
+                tagTranslationRepository.resolveSearchQueryWithDb(rawQuery)
+            } else {
+                rawQuery
+            }
             try {
                 val currentSettings = preferencesManager.getSettings()
                 val scenesQuery = if (filter.scenes.isNotEmpty()) filter.scenes.joinToString(" ") else ""
@@ -529,13 +719,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val lastPage = response.meta?.lastPage ?: 1
                 if (searchPage >= lastPage || newItems.isEmpty()) {
-                    isSearchEndReached = true
+                    _isSearchEndReached.value = true
                 } else {
                     searchPage++
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                logError(e, "MainViewModel.performSearch(query=$resolvedQuery, page=$searchPage)")
+                logError(e, "MainViewModel.performSearch(query=$initialResolvedQuery, page=$searchPage)")
                 _searchError.value = "搜索失败: ${e.message ?: "网络异常"}"
             } finally {
                 _isSearchLoading.value = false
@@ -568,6 +758,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // Detail & Single item operations
     fun selectWallpaper(wallpaper: WallpaperDto) {
+        _pendingDetailScrollOffset.value = 0
+        _isRestoredFromDetailReturn.value = false
         _selectedWallpaper.value = wallpaper
         if (settings.value.tagLocalization && wallpaper.tags.isNotEmpty()) {
             viewModelScope.launch {
@@ -593,6 +785,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun dismissDetailSheet() {
+        _pendingDetailScrollOffset.value = 0
+        _isRestoredFromDetailReturn.value = false
         _selectedWallpaper.value = null
     }
 

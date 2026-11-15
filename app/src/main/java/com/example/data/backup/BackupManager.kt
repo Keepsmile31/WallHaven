@@ -1,10 +1,12 @@
 package com.example.data.backup
 
 import android.content.Context
+import com.example.BuildConfig
 import com.example.data.db.AppDatabase
 import com.example.data.db.DownloadEntity
 import com.example.data.db.FavoriteWallpaperEntity
 import com.example.data.db.HistoryEntity
+import com.example.data.db.SearchHistoryEntity
 import com.example.data.preferences.UserPreferencesManager
 import com.example.data.webdav.WebDavClient
 import com.example.util.logError
@@ -38,17 +40,19 @@ data class BackupSettings(
 data class BackupPayload(
     val version: Int = 1,
     val timestamp: Long = System.currentTimeMillis(),
-    val appVersion: String = "1.0.0",
+    val appVersion: String = BuildConfig.VERSION_NAME,
     val settings: BackupSettings,
     val favorites: List<FavoriteWallpaperEntity> = emptyList(),
     val browseHistory: List<HistoryEntity> = emptyList(),
-    val downloadHistory: List<DownloadEntity> = emptyList()
+    val downloadHistory: List<DownloadEntity> = emptyList(),
+    val searchHistory: List<SearchHistoryEntity> = emptyList()
 )
 
 data class BackupRestoreSummary(
     val favoritesCount: Int,
     val historyCount: Int,
     val downloadsCount: Int,
+    val searchHistoryCount: Int = 0,
     val timestamp: Long
 )
 
@@ -61,11 +65,37 @@ class BackupManager(
     private val payloadAdapter = moshi.adapter(BackupPayload::class.java).indent("  ")
     private val webDavClient = WebDavClient()
 
+    private suspend fun mergeSearchHistory(imported: List<SearchHistoryEntity>): Int {
+        val cleaned = imported
+            .mapNotNull { entity ->
+                val q = entity.query.trim()
+                if (q.isEmpty()) null else entity.copy(query = q)
+            }
+        if (cleaned.isEmpty()) return 0
+
+        val existingMap = database.searchHistoryDao()
+            .getAllSearchesList()
+            .associateBy { it.query }
+        val merged = cleaned
+            .groupBy { it.query }
+            .map { (query, entries) ->
+                val maxImportedTime = entries.maxOf { it.searchedAt }
+                val existingTime = existingMap[query]?.searchedAt ?: 0L
+                SearchHistoryEntity(
+                    query = query,
+                    searchedAt = maxOf(existingTime, maxImportedTime)
+                )
+            }
+        database.searchHistoryDao().insertAllSearches(merged)
+        return merged.size
+    }
+
     suspend fun createExportJson(): String = withContext(Dispatchers.IO) {
         val currentSettings = preferencesManager.getSettings()
         val favorites = database.favoriteDao().getAllFavoritesList()
         val history = database.historyDao().getAllHistoryList()
         val downloads = database.downloadDao().getAllDownloadsList()
+        val searchHistory = database.searchHistoryDao().getAllSearchesList()
 
         val payload = BackupPayload(
             timestamp = System.currentTimeMillis(),
@@ -87,7 +117,8 @@ class BackupManager(
             ),
             favorites = favorites,
             browseHistory = history,
-            downloadHistory = downloads
+            downloadHistory = downloads,
+            searchHistory = searchHistory
         )
         payloadAdapter.toJson(payload)
     }
@@ -129,12 +160,14 @@ class BackupManager(
             if (payload.downloadHistory.isNotEmpty()) {
                 database.downloadDao().insertAllDownloads(payload.downloadHistory)
             }
+            val mergedSearchCount = mergeSearchHistory(payload.searchHistory)
 
             Result.success(
                 BackupRestoreSummary(
                     favoritesCount = payload.favorites.size,
                     historyCount = payload.browseHistory.size,
                     downloadsCount = payload.downloadHistory.size,
+                    searchHistoryCount = mergedSearchCount,
                     timestamp = payload.timestamp
                 )
             )

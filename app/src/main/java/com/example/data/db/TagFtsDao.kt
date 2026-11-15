@@ -35,6 +35,9 @@ interface TagFtsDao {
     @Query("SELECT rowid, english_tag, chinese_name, category FROM tags_fts WHERE LOWER(english_tag) = LOWER(:englishTag) LIMIT 1")
     suspend fun findByEnglishTag(englishTag: String): TagFtsEntity?
 
+    @Query("SELECT rowid, english_tag, chinese_name, category FROM tags_fts WHERE LOWER(chinese_name) = LOWER(:chineseName) LIMIT 1")
+    suspend fun findByChineseName(chineseName: String): TagFtsEntity?
+
     @Query("DELETE FROM tags_fts WHERE chinese_name LIKE '%6ffafab0%'")
     suspend fun purgeCorruptedTags()
 }

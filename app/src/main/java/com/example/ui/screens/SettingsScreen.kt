@@ -16,10 +16,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -61,7 +60,8 @@ fun SettingsScreen(
     hapticHelper: HapticHelper,
     onClearCacheNow: ((() -> Unit) -> Unit)? = null,
     onClearHistory: (() -> Unit)? = null,
-    onClearDownloads: (() -> Unit)? = null
+    onClearDownloads: (() -> Unit)? = null,
+    mainScrollState: ScrollState = rememberScrollState()
 ) {
     val navController = rememberNavController()
 
@@ -71,7 +71,7 @@ fun SettingsScreen(
     val clearDownloadsState = rememberUpdatedState(onClearDownloads)
 
     val navigateTo: (String) -> Unit = remember(navController, hapticHelper) {
-        var lastClickTime = 0L
+        var lastClickTime = -350L
         { route ->
             val now = android.os.SystemClock.elapsedRealtime()
             val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -86,7 +86,7 @@ fun SettingsScreen(
     }
 
     val navigateBack: () -> Unit = remember(navController) {
-        var lastBackTime = 0L
+        var lastBackTime = -300L
         {
             val now = android.os.SystemClock.elapsedRealtime()
             if (navController.currentBackStackEntry?.destination?.route != SettingsRoutes.MAIN && now - lastBackTime > 300L) {
@@ -115,6 +115,7 @@ fun SettingsScreen(
     ) {
         composable(SettingsRoutes.MAIN) {
             SettingsMainScreen(
+                scrollState = mainScrollState,
                 onNavigate = navigateTo
             )
         }
@@ -171,6 +172,7 @@ fun SettingsScreen(
 
 @Composable
 private fun SettingsMainScreen(
+    scrollState: ScrollState,
     onNavigate: (String) -> Unit
 ) {
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -181,7 +183,7 @@ private fun SettingsMainScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(
                 top = topInset + 6.dp,
                 bottom = navBottomInset + 88.dp,
@@ -238,7 +240,7 @@ private fun SettingsMainScreen(
         )
 
         M3ModuleCard(
-            icon = Icons.Default.Info,
+            icon = ImageVector.vectorResource(R.drawable.ic_info),
             iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
             iconTint = MaterialTheme.colorScheme.secondary,
             title = stringResource(R.string.settings_about),

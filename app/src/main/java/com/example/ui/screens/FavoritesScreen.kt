@@ -23,14 +23,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -78,7 +76,8 @@ fun FavoritesScreen(
     onBatchDownload: (List<WallpaperDto>, (BatchDownloadResult) -> Unit) -> Unit,
     onBatchUnfavorite: (List<String>) -> Unit,
     isBatchDownloading: Boolean,
-    hapticHelper: HapticHelper
+    hapticHelper: HapticHelper,
+    gridState: LazyStaggeredGridState = rememberLazyStaggeredGridState()
 ) {
     var isBatchMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
@@ -130,7 +129,7 @@ fun FavoritesScreen(
                     modifier = Modifier.padding(24.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.FavoriteBorder,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_favorite_border),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
                         modifier = Modifier.size(76.dp)
@@ -143,9 +142,21 @@ fun FavoritesScreen(
                 }
             }
         } else {
+            val toggleSelection = remember(hapticHelper) {
+                { id: String ->
+                    hapticHelper.vibrateTick()
+                    selectedIds = if (selectedIds.contains(id)) {
+                        selectedIds - id
+                    } else {
+                        selectedIds + id
+                    }
+                }
+            }
+
             // Wallpaper 2-column staggered grid
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
+                state = gridState,
                 contentPadding = PaddingValues(
                     start = 8.dp,
                     end = 8.dp,
@@ -169,16 +180,9 @@ fun FavoritesScreen(
                         isFavorite = true,
                         isSelectable = isBatchMode,
                         isSelected = selectedIds.contains(dto.id),
-                        onSelectToggle = {
-                            hapticHelper.vibrateTick()
-                            selectedIds = if (selectedIds.contains(dto.id)) {
-                                selectedIds - dto.id
-                            } else {
-                                selectedIds + dto.id
-                            }
-                        },
-                        onFavoriteToggle = { onFavoriteToggle(dto) },
-                        onClick = { onWallpaperClick(dto) }
+                        onSelectToggle = toggleSelection,
+                        onFavoriteToggle = onFavoriteToggle,
+                        onClick = onWallpaperClick
                     )
                 }
             }
@@ -261,7 +265,7 @@ fun FavoritesScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Icon(
-                        imageVector = Icons.Default.Close,
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_close),
                         contentDescription = "Close banner",
                         tint = textColor,
                         modifier = Modifier.size(18.dp)
@@ -312,7 +316,9 @@ fun FavoritesScreen(
                             modifier = Modifier.testTag("select_all_btn")
                         ) {
                             Icon(
-                                imageVector = if (allSelected) Icons.Default.Close else ImageVector.vectorResource(R.drawable.ic_select_all),
+                                imageVector = ImageVector.vectorResource(
+                                    if (allSelected) R.drawable.ic_close else R.drawable.ic_select_all
+                                ),
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -378,7 +384,11 @@ fun FavoritesScreen(
                                 .height(44.dp)
                                 .testTag("batch_unfavorite_btn")
                         ) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_delete),
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(stringResource(R.string.batch_unfavorite), fontSize = 12.sp)
                         }

@@ -26,19 +26,28 @@ data class BackupSettings(
     val colorStyle: String = "vibrant",
     val amoledBlack: Boolean = false,
     val hapticFeedback: Boolean = true,
-    val categories: String = "110",
-    val purity: String = "100",
-    val apiKey: String = "",
+    val categories: String = "111",
+    val purity: String = "110",
+    val apiKey: String? = null,
+    val webDavUrl: String? = null,
+    val webDavUsername: String? = null,
+    val webDavPassword: String? = null,
+    val webDavPath: String? = null,
+    val webDavAutoBackup: Boolean? = null,
     val hideNavOnScroll: Boolean = false,
     val useFloatingCapsuleNav: Boolean = true,
+    val downloadDirectory: String? = null,
+    val concurrentDownloads: Int? = null,
     val showFavoritesCount: Boolean = true,
     val filterMode: String = "TAB_INDEPENDENT",
+    val tagLocalization: Boolean? = null,
+    val autoClearCacheMode: String? = null,
     val liquidGlassMode: String = "ultimate"
 )
 
 @JsonClass(generateAdapter = true)
 data class BackupPayload(
-    val version: Int = 1,
+    val version: Int = CURRENT_BACKUP_VERSION,
     val timestamp: Long = System.currentTimeMillis(),
     val appVersion: String = BuildConfig.VERSION_NAME,
     val settings: BackupSettings,
@@ -46,7 +55,11 @@ data class BackupPayload(
     val browseHistory: List<HistoryEntity> = emptyList(),
     val downloadHistory: List<DownloadEntity> = emptyList(),
     val searchHistory: List<SearchHistoryEntity> = emptyList()
-)
+) {
+    companion object {
+        const val CURRENT_BACKUP_VERSION = 2
+    }
+}
 
 data class BackupRestoreSummary(
     val favoritesCount: Int,
@@ -59,11 +72,11 @@ data class BackupRestoreSummary(
 class BackupManager(
     private val context: Context,
     private val preferencesManager: UserPreferencesManager,
-    private val database: AppDatabase
+    private val database: AppDatabase,
+    private val webDavClient: WebDavClient = WebDavClient()
 ) {
     private val moshi: Moshi = Moshi.Builder().build()
     private val payloadAdapter = moshi.adapter(BackupPayload::class.java).indent("  ")
-    private val webDavClient = WebDavClient()
 
     private suspend fun mergeSearchHistory(imported: List<SearchHistoryEntity>): Int {
         val cleaned = imported
@@ -98,6 +111,7 @@ class BackupManager(
         val searchHistory = database.searchHistoryDao().getAllSearchesList()
 
         val payload = BackupPayload(
+            version = BackupPayload.CURRENT_BACKUP_VERSION,
             timestamp = System.currentTimeMillis(),
             settings = BackupSettings(
                 dynamicColor = currentSettings.dynamicColor,
@@ -109,10 +123,19 @@ class BackupManager(
                 categories = currentSettings.categories,
                 purity = currentSettings.purity,
                 apiKey = currentSettings.apiKey,
+                webDavUrl = currentSettings.webDavUrl,
+                webDavUsername = currentSettings.webDavUsername,
+                webDavPassword = currentSettings.webDavPassword,
+                webDavPath = currentSettings.webDavPath,
+                webDavAutoBackup = currentSettings.webDavAutoBackup,
                 hideNavOnScroll = currentSettings.hideNavOnScroll,
                 useFloatingCapsuleNav = currentSettings.useFloatingCapsuleNav,
+                downloadDirectory = currentSettings.downloadDirectory,
+                concurrentDownloads = currentSettings.concurrentDownloads,
                 showFavoritesCount = currentSettings.showFavoritesCount,
                 filterMode = currentSettings.filterMode.name,
+                tagLocalization = currentSettings.tagLocalization,
+                autoClearCacheMode = currentSettings.autoClearCacheMode,
                 liquidGlassMode = currentSettings.liquidGlassMode
             ),
             favorites = favorites,
@@ -123,31 +146,57 @@ class BackupManager(
         payloadAdapter.toJson(payload)
     }
 
-    suspend fun restoreFromJson(json: String): Result<BackupRestoreSummary> = withContext(Dispatchers.IO) {
+    suspend fun restoreFromJson(json: String): Result<BackupRestoreSummary> =
+        restoreFromJsonInternal(json = json, preserveConfiguredWebDavIfBlank = false)
+
+    private suspend fun restoreFromJsonInternal(
+        json: String,
+        preserveConfiguredWebDavIfBlank: Boolean
+    ): Result<BackupRestoreSummary> = withContext(Dispatchers.IO) {
         try {
             val payload = payloadAdapter.fromJson(json)
                 ?: return@withContext Result.failure(IllegalArgumentException("解析备份文件失败，格式不正确"))
 
-            // Restore settings
+            // Restore settings atomically
             payload.settings.let { s ->
-                preferencesManager.setDynamicColor(s.dynamicColor)
-                preferencesManager.setDarkMode(s.darkMode)
-                preferencesManager.setThemeColor(s.themeColor)
-                preferencesManager.setColorStyle(s.colorStyle)
-                preferencesManager.setAmoledBlack(s.amoledBlack)
-                preferencesManager.setHapticFeedback(s.hapticFeedback)
-                preferencesManager.setCategories(s.categories)
-                preferencesManager.setPurity(s.purity)
-                preferencesManager.setHideNavOnScroll(s.hideNavOnScroll)
-                preferencesManager.setUseFloatingCapsuleNav(s.useFloatingCapsuleNav)
-                preferencesManager.setShowFavoritesCount(s.showFavoritesCount)
-                preferencesManager.setLiquidGlassMode(s.liquidGlassMode)
-                try {
-                    preferencesManager.setFilterMode(com.example.data.preferences.FilterMode.valueOf(s.filterMode))
-                } catch (_: Exception) {}
-                if (s.apiKey.isNotBlank()) {
-                    preferencesManager.setApiKey(s.apiKey)
+                val resolvedFilterMode = try {
+                    com.example.data.preferences.FilterMode.valueOf(s.filterMode)
+                } catch (_: Exception) {
+                    null
                 }
+                val resolvedApiKey = when {
+                    s.apiKey == null -> null
+                    payload.version < 2 && s.apiKey.isBlank() -> null
+                    else -> s.apiKey
+                }
+                val skipBlankWebDavCredentials =
+                    preserveConfiguredWebDavIfBlank && s.webDavUrl.isNullOrBlank()
+
+                preferencesManager.restoreSettings(
+                    dynamicColor = s.dynamicColor,
+                    darkMode = s.darkMode,
+                    themeColor = s.themeColor,
+                    colorStyle = s.colorStyle,
+                    amoledBlack = s.amoledBlack,
+                    hapticFeedback = s.hapticFeedback,
+                    categories = s.categories,
+                    purity = s.purity,
+                    apiKey = resolvedApiKey,
+                    webDavUrl = if (skipBlankWebDavCredentials) null else s.webDavUrl,
+                    webDavUsername = if (skipBlankWebDavCredentials) null else s.webDavUsername,
+                    webDavPassword = if (skipBlankWebDavCredentials) null else s.webDavPassword,
+                    webDavPath = s.webDavPath,
+                    webDavAutoBackup = s.webDavAutoBackup,
+                    hideNavOnScroll = s.hideNavOnScroll,
+                    useFloatingCapsuleNav = s.useFloatingCapsuleNav,
+                    downloadDirectory = s.downloadDirectory,
+                    concurrentDownloads = s.concurrentDownloads,
+                    showFavoritesCount = s.showFavoritesCount,
+                    filterMode = resolvedFilterMode,
+                    tagLocalization = s.tagLocalization,
+                    autoClearCacheMode = s.autoClearCacheMode,
+                    liquidGlassMode = s.liquidGlassMode
+                )
             }
 
             // Restore database entities
@@ -230,7 +279,7 @@ class BackupManager(
 
             if (downloadRes.isSuccess) {
                 val json = downloadRes.getOrThrow()
-                restoreFromJson(json)
+                restoreFromJsonInternal(json = json, preserveConfiguredWebDavIfBlank = true)
             } else {
                 Result.failure(downloadRes.exceptionOrNull() ?: Exception("下载备份失败"))
             }

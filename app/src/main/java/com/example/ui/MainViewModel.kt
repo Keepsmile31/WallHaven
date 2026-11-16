@@ -12,9 +12,13 @@ import com.example.data.db.SearchHistoryEntity
 import com.example.data.model.WallpaperDto
 import com.example.data.preferences.FilterMode
 import com.example.data.preferences.AppSettings
+import com.example.data.preferences.UpdatePrefs
 import com.example.data.preferences.UserPreferencesManager
+import com.example.data.repository.AppUpdateInfo
+import com.example.data.repository.AppUpdateRepository
 import com.example.data.repository.TagSuggestion
 import com.example.data.repository.TagTranslationRepository
+import com.example.data.repository.UpdateCheckResult
 import com.example.data.repository.WallpaperRepository
 import com.example.ui.components.FilterState
 import com.example.util.BatchDownloadResult
@@ -71,6 +75,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val downloadManager = WallpaperDownloadManager(application, database, hapticHelper)
     val wallpaperSetHelper = WallpaperSetHelper(application)
     val backupManager = BackupManager(application, preferencesManager, database)
+    val updatePrefs = UpdatePrefs(application)
+    val appUpdateRepository = AppUpdateRepository(updatePrefs)
 
     // Current Bottom Tab: 0=Explore, 1=Search, 2=Favorites, 3=History, 4=Settings
     private val _currentTab = MutableStateFlow(0)
@@ -150,8 +156,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _pendingDetailScrollOffset = MutableStateFlow(0)
     val pendingDetailScrollOffset = _pendingDetailScrollOffset.asStateFlow()
 
-    private val _isRestoredFromDetailReturn = MutableStateFlow(false)
-    val isRestoredFromDetailReturn = _isRestoredFromDetailReturn.asStateFlow()
+    private val _pendingUpdateInfo = MutableStateFlow<AppUpdateInfo?>(null)
+    val pendingUpdateInfo = _pendingUpdateInfo.asStateFlow()
+    private var hasCheckedColdStartUpdate = false
 
     val settings: StateFlow<AppSettings> = preferencesManager.settingsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
@@ -570,7 +577,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         _pendingDetailScrollOffset.value = 0
-        _isRestoredFromDetailReturn.value = false
         _selectedWallpaper.value = null
         _currentTab.value = 1
 
@@ -605,7 +611,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         _pendingDetailScrollOffset.value = 0
-        _isRestoredFromDetailReturn.value = false
         _selectedWallpaper.value = null
         _currentTab.value = 1
         _selectedSearchColor.value = colorHex
@@ -618,7 +623,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _detailReturnStack.value = stack.dropLast(1)
         _currentTab.value = entry.returnTab
         _pendingDetailScrollOffset.value = entry.scrollOffset.coerceAtLeast(0)
-        _isRestoredFromDetailReturn.value = true
         _selectedWallpaper.value = entry.wallpaper
         if (settings.value.tagLocalization && entry.wallpaper.tags.isNotEmpty()) {
             viewModelScope.launch {
@@ -759,7 +763,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Detail & Single item operations
     fun selectWallpaper(wallpaper: WallpaperDto) {
         _pendingDetailScrollOffset.value = 0
-        _isRestoredFromDetailReturn.value = false
         _selectedWallpaper.value = wallpaper
         if (settings.value.tagLocalization && wallpaper.tags.isNotEmpty()) {
             viewModelScope.launch {
@@ -786,7 +789,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun dismissDetailSheet() {
         _pendingDetailScrollOffset.value = 0
-        _isRestoredFromDetailReturn.value = false
         _selectedWallpaper.value = null
     }
 
@@ -855,10 +857,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun acceptDisclaimer() {
+    fun acceptDisclaimer(confirmedAt: Long = System.currentTimeMillis()) {
         viewModelScope.launch {
-            preferencesManager.setDisclaimerAccepted(true)
+            preferencesManager.setDisclaimerAccepted(true, acceptedAt = confirmedAt)
         }
+    }
+
+    fun checkForUpdatesOnColdStart() {
+        if (hasCheckedColdStartUpdate) return
+        hasCheckedColdStartUpdate = true
+        viewModelScope.launch {
+            val result = appUpdateRepository.checkForUpdate(isColdStart = true)
+            if (result is UpdateCheckResult.UpdateAvailable) {
+                _pendingUpdateInfo.value = result.info
+            }
+        }
+    }
+
+    fun dismissUpdateDialog() {
+        _pendingUpdateInfo.value = null
+    }
+
+    fun dismissUpdateLater() {
+        appUpdateRepository.remindLaterToday()
+        _pendingUpdateInfo.value = null
+    }
+
+    fun ignoreUpdateVersion(tagName: String) {
+        appUpdateRepository.ignoreVersion(tagName)
+        _pendingUpdateInfo.value = null
     }
 
     fun clearCacheNow(onComplete: () -> Unit) {

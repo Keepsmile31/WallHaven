@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -55,14 +57,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.BuildConfig
 import com.example.R
 import com.example.data.backup.BackupManager
 import com.example.data.preferences.AppSettings
+import com.example.data.preferences.UpdatePrefs
 import com.example.data.preferences.UserPreferencesManager
+import com.example.data.repository.AppUpdateInfo
+import com.example.data.repository.AppUpdateRepository
+import com.example.data.repository.UpdateCheckResult
 import com.example.data.webdav.WebDavClient
+import com.example.ui.components.AppUpdateDialog
 import com.example.ui.components.LiquidGlassSwitch
+import com.example.ui.components.SafeTextToolbarProvider
+import com.example.ui.components.WallhavenAgreementBody
 import com.example.util.BugLogManager
 import com.example.util.HapticHelper
 import kotlinx.coroutines.Dispatchers
@@ -366,15 +376,21 @@ private fun WebDavConfigDialog(
 
     AlertDialog(
         onDismissRequest = { if (!isSaving) onDismiss() },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .widthIn(max = 560.dp),
         title = { Text("WebDAV 服务器设置") },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
+            SafeTextToolbarProvider {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                 OutlinedTextField(
                     value = urlInput,
                     onValueChange = { urlInput = it },
@@ -451,6 +467,7 @@ private fun WebDavConfigDialog(
                     }
                 }
             }
+            }
         },
         confirmButton = {
             Button(
@@ -523,13 +540,19 @@ private fun BackupStrategyDialog(onDismiss: () -> Unit) {
 internal fun SettingsAboutScreen(
     settings: AppSettings,
     hapticHelper: HapticHelper,
+    appUpdateRepository: AppUpdateRepository? = null,
     onClearHistory: (() -> Unit)?,
     onClearDownloads: (() -> Unit)?,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val resolvedUpdateRepository = remember(context, appUpdateRepository) {
+        appUpdateRepository ?: AppUpdateRepository(UpdatePrefs(context))
+    }
     val debugLogCount by BugLogManager.logCount.collectAsStateWithLifecycle()
-    var showUpdateDialog by remember { mutableStateOf(false) }
+    var isCheckingUpdate by remember { mutableStateOf(false) }
+    var availableUpdateInfo by remember { mutableStateOf<AppUpdateInfo?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showUserAgreementDialog by remember { mutableStateOf(false) }
     var showPrivacyPolicyDialog by remember { mutableStateOf(false) }
@@ -606,12 +629,78 @@ internal fun SettingsAboutScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
-                    onClick = { showUpdateDialog = true },
+                    enabled = !isCheckingUpdate,
+                    onClick = {
+                        if (isCheckingUpdate) return@Button
+                        hapticHelper.vibrateClick(settings.hapticFeedback)
+                        isCheckingUpdate = true
+                        scope.launch {
+                            when (val result = resolvedUpdateRepository.checkForUpdate(isColdStart = false)) {
+                                is UpdateCheckResult.UpdateAvailable -> {
+                                    availableUpdateInfo = result.info
+                                }
+                                is UpdateCheckResult.UpToDate -> {
+                                    Toast.makeText(
+                                        context,
+                                        "当前已是最新版本 (v${result.currentVersion})",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                is UpdateCheckResult.Error -> {
+                                    Toast.makeText(
+                                        context,
+                                        "检查更新失败: ${result.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                null -> Unit
+                            }
+                            isCheckingUpdate = false
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth().testTag("check_update_button")
                 ) {
-                    Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_cloud_download), contentDescription = null, modifier = Modifier.size(16.dp))
+                    if (isCheckingUpdate) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("正在检查更新...")
+                    } else {
+                        Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_cloud_download), contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.check_updates))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
+                    onClick = {
+                        hapticHelper.vibrateClick(settings.hapticFeedback)
+                        val browserIntent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3")
+                        )
+                        try {
+                            context.startActivity(browserIntent)
+                        } catch (_: Exception) {
+                            Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("update_123pan_button")
+                ) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("检查更新 (123云盘发布源)")
+                    Text("版本更新 (123网盘)")
                 }
             }
         }
@@ -627,10 +716,57 @@ internal fun SettingsAboutScreen(
 
             M3SettingsDivider()
 
+            val formattedSignatureTime = remember(settings.disclaimerAcceptedAt) {
+                if (settings.disclaimerAcceptedAt > 0L) {
+                    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                        .format(java.util.Date(settings.disclaimerAcceptedAt))
+                } else null
+            }
+            val signatureStatusSubtitle = when {
+                settings.disclaimerAccepted && formattedSignatureTime != null ->
+                    "已签署声明 · 协议版本 v${settings.disclaimerAcceptedVersion} · 签署时间 $formattedSignatureTime"
+                settings.disclaimerAccepted ->
+                    "已签署声明 · 协议版本 v${settings.disclaimerAcceptedVersion}"
+                else ->
+                    "待确认签署 · 当前协议版本 v${UserPreferencesManager.CURRENT_DISCLAIMER_VERSION}"
+            }
+            M3SettingsItemRow(
+                icon = ImageVector.vectorResource(R.drawable.ic_check_circle),
+                title = "协议签署状态",
+                subtitle = signatureStatusSubtitle,
+                testTag = "settings_signature_status_row",
+                onClick = { showUserAgreementDialog = true },
+                trailingContent = {
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = if (settings.disclaimerAccepted) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        }
+                    ) {
+                        Text(
+                            text = if (settings.disclaimerAccepted) "已签署" else "待签署",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (settings.disclaimerAccepted) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            },
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            )
+
+            M3SettingsDivider()
+
             M3SettingsItemRow(
                 icon = ImageVector.vectorResource(R.drawable.ic_description),
                 title = stringResource(R.string.user_agreement_title),
-                subtitle = "服务条款与使用准则",
+                subtitle = "用户协议、地域限制与免责声明",
+                testTag = "settings_disclaimer_row",
                 onClick = { showUserAgreementDialog = true }
             )
 
@@ -646,15 +782,16 @@ internal fun SettingsAboutScreen(
             M3SettingsDivider()
 
             M3SettingsItemRow(
-                icon = ImageVector.vectorResource(R.drawable.ic_open_in_new),
-                title = "WallHaven 官方主站",
-                subtitle = "https://wallhaven.cc",
+                icon = ImageVector.vectorResource(R.drawable.ic_telegram),
+                title = "Telegram 频道",
+                subtitle = "加入官方频道获取最新资讯与交流",
+                testTag = "settings_telegram_channel_row",
                 onClick = {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wallhaven.cc"))
+                    val tgIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/WallHaven8"))
                     try {
-                        context.startActivity(browserIntent)
+                        context.startActivity(tgIntent)
                     } catch (_: Exception) {
-                        Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "无法打开 Telegram 或浏览器", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
@@ -663,10 +800,10 @@ internal fun SettingsAboutScreen(
 
             M3SettingsItemRow(
                 icon = ImageVector.vectorResource(R.drawable.ic_open_in_new),
-                title = "开发者主页 (酷安)",
-                subtitle = "前往酷安查看最新动态与交流讨论",
+                title = "WallHaven 官方主站",
+                subtitle = "https://wallhaven.cc",
                 onClick = {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.coolapk.com/u/3207664"))
+                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wallhaven.cc"))
                     try {
                         context.startActivity(browserIntent)
                     } catch (_: Exception) {
@@ -775,8 +912,22 @@ internal fun SettingsAboutScreen(
         }
     }
 
-    if (showUpdateDialog) {
-        UpdateCheckDialog(onDismiss = { showUpdateDialog = false })
+    val updateDialogInfo = availableUpdateInfo
+    if (updateDialogInfo != null) {
+        AppUpdateDialog(
+            updateInfo = updateDialogInfo,
+            onUpdateNow = {
+                availableUpdateInfo = null
+            },
+            onRemindLater = {
+                resolvedUpdateRepository.remindLaterToday()
+                availableUpdateInfo = null
+            },
+            onIgnoreVersion = {
+                resolvedUpdateRepository.ignoreVersion(updateDialogInfo.tagName)
+                availableUpdateInfo = null
+            }
+        )
     }
 
     if (showAboutDialog) {
@@ -784,7 +935,11 @@ internal fun SettingsAboutScreen(
     }
 
     if (showUserAgreementDialog) {
-        UserAgreementDialog(onDismiss = { showUserAgreementDialog = false })
+        UserAgreementDialog(
+            acceptedVersion = settings.disclaimerAcceptedVersion,
+            acceptedAt = settings.disclaimerAcceptedAt,
+            onDismiss = { showUserAgreementDialog = false }
+        )
     }
 
     if (showPrivacyPolicyDialog) {
@@ -843,63 +998,6 @@ internal fun SettingsAboutScreen(
 }
 
 @Composable
-private fun UpdateCheckDialog(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.check_updates)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "当前安装版本: v${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp
-                )
-                Text(
-                    text = "123 云盘已收录最新发布版本以及历史版本归档，支持在此查看更新详情、直接下载最新版本或随时回退至历史版本。",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 18.sp
-                )
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "架构: arm64-v8a · Compile SDK 37",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3"))
-                    try {
-                        context.startActivity(intent)
-                    } catch (_: Exception) {
-                        Toast.makeText(context, "无法打开浏览器，请检查网络", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            ) {
-                Icon(imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new), contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("前往 123 云盘")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        }
-    )
-}
-
-@Composable
 private fun AboutWallHavenDialog(onDismiss: () -> Unit) {
     val context = LocalContext.current
     AlertDialog(
@@ -932,14 +1030,14 @@ private fun AboutWallHavenDialog(onDismiss: () -> Unit) {
                 OutlinedButton(
                     onClick = {
                         try {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.coolapk.com/u/3207664")))
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/WallHaven8")))
                         } catch (_: Exception) {
-                            Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "无法打开 Telegram 或浏览器", Toast.LENGTH_SHORT).show()
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(stringResource(R.string.about_developer_link), fontSize = 12.sp)
+                    Text("Telegram 频道 (@WallHaven8)", fontSize = 12.sp)
                 }
                 OutlinedButton(
                     onClick = {
@@ -964,23 +1062,41 @@ private fun AboutWallHavenDialog(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun UserAgreementDialog(onDismiss: () -> Unit) {
+private fun UserAgreementDialog(
+    acceptedVersion: Int,
+    acceptedAt: Long,
+    onDismiss: () -> Unit
+) {
+    val formattedAcceptedTime = remember(acceptedAt) {
+        if (acceptedAt > 0L) {
+            java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault())
+                .format(java.util.Date(acceptedAt))
+        } else null
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.user_agreement_title)) },
         text = {
-            Column(
-                modifier = Modifier
-                    .heightIn(max = 360.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("1. 服务范围与宗旨", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                Text("本应用为 WallHaven (wallhaven.cc) 官方开放 API 的第三方开源客户端，旨在为用户提供优质的高清壁纸浏览、检索与本地缓存管理服务。", fontSize = 13.sp, lineHeight = 18.sp)
-                Text("2. 用户权利与义务", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                Text("用户应在遵守法律法规的前提下使用壁纸资源，壁纸知识产权归原作者所有，仅供个人非商用学习与鉴赏。", fontSize = 13.sp, lineHeight = 18.sp)
-                Text("3. 免责声明", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = MaterialTheme.colorScheme.primary)
-                Text("因第三方服务器网络波动或不可抗力导致的服务中断，本客户端将协助用户重试，但不承担相关衍生责任。", fontSize = 13.sp, lineHeight = 18.sp)
+            SafeTextToolbarProvider {
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                        .testTag("settings_disclaimer_dialog_content")
+                ) {
+                    if (formattedAcceptedTime != null) {
+                        Text(
+                            text = "协议版本：v$acceptedVersion · 确认签署时间：$formattedAcceptedTime",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
+                    }
+                    SelectionContainer {
+                        WallhavenAgreementBody(showFooterIndicator = false)
+                    }
+                }
             }
         },
         confirmButton = {

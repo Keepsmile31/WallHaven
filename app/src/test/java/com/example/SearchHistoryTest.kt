@@ -432,11 +432,7 @@ class SearchHistoryTest {
         assertEquals(2, viewModel.currentTab.value)
         assertEquals("wp_detail_1", viewModel.selectedWallpaper.value?.id)
         assertEquals(640, viewModel.pendingDetailScrollOffset.value)
-        assertTrue(viewModel.isRestoredFromDetailReturn.value)
         assertTrue(viewModel.detailReturnStack.value.isEmpty())
-
-        viewModel.dismissDetailSheet()
-        assertFalse(viewModel.isRestoredFromDetailReturn.value)
 
         viewModel.consumePendingDetailScroll()
         assertEquals(0, viewModel.pendingDetailScrollOffset.value)
@@ -506,13 +502,11 @@ class SearchHistoryTest {
                     tagTranslations = mapOf("cat" to "猫咪"),
                     isTagLocalizationEnabled = true,
                     initialScrollOffset = 80,
-                    onScrollRestored = { scrollRestored = true },
-                    isRestoredFromSearch = true
+                    onScrollRestored = { scrollRestored = true }
                 )
             }
         }
 
-        composeTestRule.onNodeWithTag("restored_detail_surface").assertExists()
         composeTestRule.waitUntil(timeoutMillis = 5_000L) { scrollRestored }
         composeTestRule.onNodeWithTag("detail_tag_cat").performScrollTo().performClick()
         composeTestRule.waitForIdle()

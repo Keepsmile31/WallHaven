@@ -12,13 +12,13 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class WebDavClient {
-
+class WebDavClient(
     private val client: OkHttpClient = ApiClient.baseOkHttpClient.newBuilder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
+) {
 
     private fun normalizeUrl(baseUrl: String, path: String): String {
         val cleanBase = baseUrl.trim().trimEnd('/')

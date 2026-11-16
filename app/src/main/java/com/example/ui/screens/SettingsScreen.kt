@@ -36,6 +36,7 @@ import com.example.R
 import com.example.data.backup.BackupManager
 import com.example.data.preferences.AppSettings
 import com.example.data.preferences.UserPreferencesManager
+import com.example.data.repository.AppUpdateRepository
 import com.example.ui.components.AppHeaderBar
 import com.example.util.HapticHelper
 
@@ -58,6 +59,7 @@ fun SettingsScreen(
     preferencesManager: UserPreferencesManager,
     backupManager: BackupManager,
     hapticHelper: HapticHelper,
+    appUpdateRepository: AppUpdateRepository? = null,
     onClearCacheNow: ((() -> Unit) -> Unit)? = null,
     onClearHistory: (() -> Unit)? = null,
     onClearDownloads: (() -> Unit)? = null,
@@ -162,6 +164,7 @@ fun SettingsScreen(
             SettingsAboutScreen(
                 settings = settingsState.value,
                 hapticHelper = hapticHelper,
+                appUpdateRepository = appUpdateRepository,
                 onClearHistory = clearHistoryState.value,
                 onClearDownloads = clearDownloadsState.value,
                 onBack = navigateBack
@@ -214,7 +217,7 @@ private fun SettingsMainScreen(
             iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
             iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
             title = "内容与浏览",
-            subtitle = "WallHaven API 密钥、多标签筛选模式与标签中文本地化",
+            subtitle = "WallHaven API Key、多标签筛选模式与标签中文本地化",
             testTag = "settings_content_card",
             onClick = { onNavigate(SettingsRoutes.CONTENT) }
         )

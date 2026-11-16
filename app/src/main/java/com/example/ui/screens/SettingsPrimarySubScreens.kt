@@ -12,17 +12,21 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -54,13 +58,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import com.example.R
 import com.example.data.preferences.AppSettings
 import com.example.data.preferences.FilterMode
 import com.example.data.preferences.UserPreferencesManager
+import com.example.ui.components.ContentRatingWarningDialog
 import com.example.ui.components.LiquidGlassSwitch
+import com.example.ui.components.SafeTextToolbarProvider
 import com.example.ui.theme.AvailableThemeColors
 import com.example.util.CacheManager
 import com.example.util.HapticHelper
@@ -561,11 +569,11 @@ internal fun SettingsContentScreen(
         title = "内容与浏览",
         onBack = onBack
     ) {
-        M3SettingsSectionTitle(title = "身份与密钥", icon = ImageVector.vectorResource(R.drawable.ic_key))
+        M3SettingsSectionTitle(title = "身份与 API Key", icon = ImageVector.vectorResource(R.drawable.ic_key))
         M3SettingsCard {
             M3SettingsItemRow(
                 icon = ImageVector.vectorResource(R.drawable.ic_key),
-                title = "WallHaven API 密钥",
+                title = "WallHaven API Key",
                 subtitle = if (settings.apiKey.isNotBlank()) {
                     "已配置 (••••••••${settings.apiKey.takeLast(4)})"
                 } else {
@@ -676,59 +684,122 @@ private fun ApiKeyDialog(
 ) {
     val context = LocalContext.current
     var keyInput by remember(currentApiKey) { mutableStateOf(currentApiKey) }
+    var showContentRatingWarning by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("WallHaven API 密钥") },
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
+            .widthIn(max = 560.dp),
+        title = { Text("WallHaven API Key") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = stringResource(R.string.settings_api_desc),
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 17.sp
-                )
-                OutlinedTextField(
-                    value = keyInput,
-                    onValueChange = { keyInput = it },
-                    label = { Text("API Key") },
-                    placeholder = { Text("填写您的 API Key") },
-                    singleLine = true,
+            SafeTextToolbarProvider {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .testTag("api_key_input")
-                )
-                OutlinedButton(
-                    onClick = {
-                        val intent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://1815318986.share.123pan.cn/123pan/ngLtVv-N3Fm3")
-                        )
-                        try {
-                            context.startActivity(intent)
-                        } catch (_: Exception) {
-                            Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp)
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new),
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
+                    Text(
+                        text = stringResource(R.string.settings_api_desc),
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 17.sp
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("获取教程 (${stringResource(R.string.channel_123pan)})", fontSize = 12.sp)
+                    OutlinedTextField(
+                        value = keyInput,
+                        onValueChange = { keyInput = it },
+                        label = { Text("API Key") },
+                        placeholder = { Text("填写您的 API Key") },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("api_key_input")
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://wallhaven.cc/settings/account")
+                            )
+                            try {
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("api_key_official_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "前往官网获取 API Key",
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://1815318986.share.123pan.cn/123pan/ngLtVv-N3Fm3")
+                            )
+                            try {
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                Toast.makeText(context, "无法打开浏览器", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("api_key_123pan_btn"),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_open_in_new),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "前往 123网盘 获取 API Key",
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    Toast.makeText(context, "API Key 保存成功", Toast.LENGTH_SHORT).show()
-                    onSave(keyInput)
-                }
+                    val trimmed = keyInput.trim()
+                    if (trimmed.isNotBlank() && trimmed != currentApiKey.trim()) {
+                        showContentRatingWarning = true
+                    } else {
+                        if (trimmed != currentApiKey.trim()) {
+                            Toast.makeText(context, "API Key 已清除", Toast.LENGTH_SHORT).show()
+                        }
+                        onSave(trimmed)
+                    }
+                },
+                modifier = Modifier.testTag("api_key_save_btn")
             ) {
                 Text(stringResource(R.string.action_save))
             }
@@ -739,6 +810,19 @@ private fun ApiKeyDialog(
             }
         }
     )
+
+    if (showContentRatingWarning) {
+        ContentRatingWarningDialog(
+            onConfirm = {
+                showContentRatingWarning = false
+                Toast.makeText(context, "API Key 保存成功", Toast.LENGTH_SHORT).show()
+                onSave(keyInput.trim())
+            },
+            onDismiss = {
+                showContentRatingWarning = false
+            }
+        )
+    }
 }
 
 @Composable

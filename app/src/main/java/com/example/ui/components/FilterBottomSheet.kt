@@ -215,6 +215,7 @@ fun FilterBottomSheet(
         val categories = if (initialFilterState.categories == "110") "111" else initialFilterState.categories
         mutableStateOf(initialFilterState.copy(categories = categories, purity = clampedPurity))
     }
+    var pendingPurityEnableIndex by remember { mutableStateOf<Int?>(null) }
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -445,6 +446,10 @@ fun FilterBottomSheet(
                                 onClick = {
                                     if (isRestricted && !isChecked && !hasApiKey) {
                                         onRequireApiKey()
+                                        return@FilterChip
+                                    }
+                                    if (!isChecked && (index == 1 || index == 2)) {
+                                        pendingPurityEnableIndex = index
                                         return@FilterChip
                                     }
                                     val arr = transientState.purity.toCharArray()
@@ -687,6 +692,23 @@ fun FilterBottomSheet(
                 Text(stringResource(R.string.filter_confirm), fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
         }
+    }
+
+    val targetPurityIdx = pendingPurityEnableIndex
+    if (targetPurityIdx != null) {
+        ContentRatingWarningDialog(
+            onConfirm = {
+                val arr = transientState.purity.toCharArray()
+                if (targetPurityIdx in arr.indices) {
+                    arr[targetPurityIdx] = '1'
+                    transientState = transientState.copy(purity = String(arr))
+                }
+                pendingPurityEnableIndex = null
+            },
+            onDismiss = {
+                pendingPurityEnableIndex = null
+            }
+        )
     }
 }
 

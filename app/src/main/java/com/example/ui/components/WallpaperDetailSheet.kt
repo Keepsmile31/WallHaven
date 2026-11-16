@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import android.content.Intent
+import android.graphics.PixelFormat
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.ViewGroup
@@ -8,12 +9,11 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -72,7 +72,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -101,7 +100,6 @@ import com.example.util.DownloadStatus
 import com.example.util.HapticHelper
 import com.example.util.WallpaperSetHelper
 import com.example.util.WallpaperTarget
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -132,8 +130,7 @@ fun WallpaperDetailSheet(
     tagTranslations: Map<String, String> = emptyMap(),
     isTagLocalizationEnabled: Boolean = false,
     initialScrollOffset: Int = 0,
-    onScrollRestored: () -> Unit = {},
-    isRestoredFromSearch: Boolean = false
+    onScrollRestored: () -> Unit = {}
 ) {
     if (wallpaper == null) return
 
@@ -175,6 +172,7 @@ fun WallpaperDetailSheet(
             .build()
     }
 
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val detailScrollState = rememberScrollState(initial = initialScrollOffset.coerceAtLeast(0))
 
     LaunchedEffect(wallpaper.id, initialScrollOffset) {
@@ -190,7 +188,13 @@ fun WallpaperDetailSheet(
         }
     }
 
-    val detailBody: @Composable () -> Unit = {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        dragHandle = null,
+        containerColor = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxHeight()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -198,25 +202,21 @@ fun WallpaperDetailSheet(
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            if (!isRestoredFromSearch) {
-                // Subtle drag indicator affordance for bottom sheet mode
+            // Subtle drag indicator affordance
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 4.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(width = 36.dp, height = 4.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                                shape = RoundedCornerShape(2.dp)
-                            )
-                    )
-                }
-            } else {
-                Spacer(modifier = Modifier.height(6.dp))
+                        .size(width = 36.dp, height = 4.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
             }
 
             // Header Bar
@@ -616,36 +616,6 @@ fun WallpaperDetailSheet(
         }
     }
 
-    if (isRestoredFromSearch) {
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    awaitPointerEventScope {
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            event.changes.forEach { it.consume() }
-                        }
-                    }
-                }
-                .testTag("restored_detail_surface")
-        ) {
-            detailBody()
-        }
-    } else {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            sheetState = sheetState,
-            dragHandle = null,
-            containerColor = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.fillMaxHeight()
-        ) {
-            detailBody()
-        }
-    }
-
     // Set Wallpaper Dialog
     if (showSetWallpaperDialog) {
         AlertDialog(
@@ -738,93 +708,52 @@ fun WallpaperDetailSheet(
         )
     }
 
-    // Full Screen Preview Dialog with True Non-Floating Edge-to-Edge Immersive Window
+    // Full Screen Preview Dialog with True Non-Floating Edge-to-Edge Translucent Immersive Window
     if (showFullScreenPreview) {
         ImmersiveFullScreenDialog(
             onDismissRequest = { isFullScreenVisible = false }
         ) {
+            val transitionState = remember { MutableTransitionState(false) }
             LaunchedEffect(isFullScreenVisible) {
-                if (!isFullScreenVisible) {
-                    delay(220)
+                if (isFullScreenVisible) {
+                    transitionState.targetState = true
+                } else {
+                    transitionState.targetState = false
+                    snapshotFlow {
+                        transitionState.isIdle && !transitionState.currentState
+                    }
+                        .filter { it }
+                        .first()
                     showFullScreenPreview = false
                 }
             }
 
-            AnimatedVisibility(
-                visible = isFullScreenVisible,
-                enter = fadeIn(animationSpec = tween(260)) + scaleIn(initialScale = 0.88f, animationSpec = tween(260)),
-                exit = fadeOut(animationSpec = tween(200)) + scaleOut(targetScale = 0.88f, animationSpec = tween(200))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                ) {
-                    var isFullImageLoading by remember { mutableStateOf(true) }
+            val transition = rememberTransition(transitionState, label = "fullscreen_preview_transition")
+            val backdropAlpha by transition.animateFloat(
+                transitionSpec = {
+                    if (targetState) tween(220, easing = FastOutSlowInEasing)
+                    else tween(180, easing = FastOutSlowInEasing)
+                },
+                label = "fullscreen_backdrop_alpha"
+            ) { visible -> if (visible) 1f else 0f }
+            val imageScale by transition.animateFloat(
+                transitionSpec = {
+                    if (targetState) tween(240, easing = FastOutSlowInEasing)
+                    else tween(180, easing = FastOutSlowInEasing)
+                },
+                label = "fullscreen_image_scale"
+            ) { visible -> if (visible) 1f else 0.92f }
 
-                    AsyncImage(
-                        model = fullImageRequest,
-                        contentDescription = "Full Screen Wallpaper",
-                        contentScale = ContentScale.Fit, // Zero cropping
-                        onSuccess = { isFullImageLoading = false },
-                        onError = { isFullImageLoading = false },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clickable { isFullScreenVisible = false }
-                    )
-
-                    if (isFullImageLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White.copy(alpha = 0.7f),
-                            strokeWidth = 2.dp,
-                            modifier = Modifier
-                                .size(36.dp)
-                                .align(Alignment.Center)
-                        )
-                    }
-
-                    // Top Bar with Resolution / File Size Info and Close Button
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            color = Color.Black.copy(alpha = 0.6f),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                text = "${wallpaper.resolution} • ${CacheManager.formatBytes(wallpaper.fileSize, zeroText = "未知", mbDecimals = 2, kbDecimals = 1)}",
-                                color = Color.White.copy(alpha = 0.9f),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                hapticHelper.vibrateClick()
-                                isFullScreenVisible = false
-                            },
-                            modifier = Modifier
-                                .background(Color.Black.copy(alpha = 0.6f), CircleShape)
-                                .size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = ImageVector.vectorResource(R.drawable.ic_close),
-                                contentDescription = "Close",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-            }
+            ZoomableFullscreenViewer(
+                imageRequest = fullImageRequest,
+                infoText = "${wallpaper.resolution} • ${CacheManager.formatBytes(wallpaper.fileSize, zeroText = "未知", mbDecimals = 2, kbDecimals = 1)}",
+                fallbackAspectRatio = parsedRatio,
+                onClose = { isFullScreenVisible = false },
+                onTapFeedback = { hapticHelper.vibrateClick() },
+                backdropAlphaMultiplier = backdropAlpha,
+                imageScaleMultiplier = imageScale,
+                contentAlphaMultiplier = backdropAlpha
+            )
         }
     }
 }
@@ -849,7 +778,7 @@ private fun ImmersiveFullScreenDialog(
     val currentOnDismiss by rememberUpdatedState(onDismissRequest)
 
     val dialog = remember {
-        object : ComponentDialog(context, android.R.style.Theme_DeviceDefault_NoActionBar) {
+        object : ComponentDialog(context, android.R.style.Theme_Translucent_NoTitleBar) {
             override fun onCreate(savedInstanceState: Bundle?) {
                 super.onCreate(savedInstanceState)
                 configureImmersiveWindow()
@@ -862,7 +791,10 @@ private fun ImmersiveFullScreenDialog(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    win.setBackgroundDrawable(ColorDrawable(android.graphics.Color.BLACK))
+                    win.setFormat(PixelFormat.TRANSLUCENT)
+                    win.setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
+                    win.setWindowAnimations(0)
+                    win.setDimAmount(0f)
                     @Suppress("DEPRECATION")
                     win.clearFlags(
                         WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS or
@@ -898,6 +830,7 @@ private fun ImmersiveFullScreenDialog(
                 }
             })
             val composeView = ComposeView(context).apply {
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
                 setParentCompositionContext(compositionContext)
                 setContent {
                     currentContent()
@@ -913,6 +846,7 @@ private fun ImmersiveFullScreenDialog(
     }
 
     DisposableEffect(dialog) {
+        dialog.configureImmersiveWindow()
         dialog.show()
         dialog.configureImmersiveWindow()
         onDispose {

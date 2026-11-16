@@ -12,15 +12,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -73,13 +70,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.data.model.WallpaperDto
 import com.example.data.preferences.AppSettings
 import com.example.ui.MainViewModel
+import com.example.ui.components.AppUpdateDialog
 import com.example.ui.components.DisclaimerDialog
 import com.example.ui.components.FloatingCapsuleNavigationBar
 import com.example.ui.components.LocalLiquidGlassMode
 import com.example.ui.components.NavBarDestination
+import com.example.ui.components.SafeTextToolbarProvider
 import com.example.ui.components.WallpaperDetailSheet
 import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.FavoritesScreen
@@ -139,19 +137,37 @@ class MainActivity : ComponentActivity() {
                 colorStyle = settings.colorStyle,
                 amoledBlack = settings.amoledBlack
             ) {
-                // First-launch mandatory Disclaimer and Terms of Service pop-up
-                if (isSettingsLoaded && !settings.disclaimerAccepted) {
-                    DisclaimerDialog(
-                        onAgree = {
-                            viewModel.acceptDisclaimer()
-                        },
-                        onExit = {
-                            finishAffinity()
-                        }
-                    )
-                }
+                SafeTextToolbarProvider {
+                    // First-launch / updated-terms mandatory Disclaimer and Terms of Service pop-up
+                    if (isSettingsLoaded && !settings.disclaimerAccepted) {
+                        DisclaimerDialog(
+                            onAgree = { confirmedAt ->
+                                viewModel.acceptDisclaimer(confirmedAt)
+                            },
+                            onExit = {
+                                finishAffinity()
+                            }
+                        )
+                    }
 
-                CompositionLocalProvider(LocalLiquidGlassMode provides settings.liquidGlassMode) {
+                    val pendingUpdateInfo by viewModel.pendingUpdateInfo.collectAsStateWithLifecycle()
+                    LaunchedEffect(isSettingsLoaded, settings.disclaimerAccepted) {
+                        if (isSettingsLoaded && settings.disclaimerAccepted) {
+                            viewModel.checkForUpdatesOnColdStart()
+                        }
+                    }
+
+                    val updateInfo = pendingUpdateInfo
+                    if (isSettingsLoaded && settings.disclaimerAccepted && updateInfo != null) {
+                        AppUpdateDialog(
+                            updateInfo = updateInfo,
+                            onUpdateNow = viewModel::dismissUpdateDialog,
+                            onRemindLater = viewModel::dismissUpdateLater,
+                            onIgnoreVersion = { viewModel.ignoreUpdateVersion(updateInfo.tagName) }
+                        )
+                    }
+
+                    CompositionLocalProvider(LocalLiquidGlassMode provides settings.liquidGlassMode) {
                     Surface(
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
@@ -326,6 +342,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+                }
                 }
             }
         }
@@ -519,6 +536,7 @@ private fun SettingsTabContent(
         preferencesManager = viewModel.preferencesManager,
         backupManager = viewModel.backupManager,
         hapticHelper = viewModel.hapticHelper,
+        appUpdateRepository = viewModel.appUpdateRepository,
         onClearCacheNow = viewModel::clearCacheNow,
         onClearHistory = viewModel::clearHistory,
         onClearDownloads = viewModel::clearDownloads,
@@ -535,71 +553,7 @@ private fun WallpaperDetailOverlay(
 ) {
     val selectedWallpaper by viewModel.selectedWallpaper.collectAsStateWithLifecycle()
     val pendingDetailScrollOffset by viewModel.pendingDetailScrollOffset.collectAsStateWithLifecycle()
-    val isRestoredFromDetailReturn by viewModel.isRestoredFromDetailReturn.collectAsStateWithLifecycle()
-
-    var cachedRestoredWallpaper by remember { mutableStateOf<WallpaperDto?>(null) }
-    val showRestoredOverlay = selectedWallpaper != null && isRestoredFromDetailReturn
-    if (showRestoredOverlay) {
-        cachedRestoredWallpaper = selectedWallpaper
-    }
-
-    AnimatedVisibility(
-        visible = showRestoredOverlay,
-        enter = fadeIn(tween(durationMillis = 200, easing = FastOutSlowInEasing)) +
-            slideInHorizontally(tween(durationMillis = 240, easing = FastOutSlowInEasing)) { -it / 6 } +
-            scaleIn(initialScale = 0.96f, animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing)),
-        exit = fadeOut(tween(durationMillis = 180, easing = FastOutSlowInEasing)) +
-            scaleOut(targetScale = 0.96f, animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
-    ) {
-        cachedRestoredWallpaper?.let { wp ->
-            val currentStatus by remember(viewModel, wp.id) {
-                viewModel.downloadStatusMap.map { it[wp.id] }.distinctUntilChanged()
-            }.collectAsStateWithLifecycle(null)
-            val isFav by remember(viewModel, wp.id) {
-                viewModel.favoriteIds.map { wp.id in it }.distinctUntilChanged()
-            }.collectAsStateWithLifecycle(false)
-            val tagTranslations by viewModel.tagTranslations.collectAsStateWithLifecycle()
-
-            WallpaperDetailSheet(
-                wallpaper = wp,
-                isFavorite = isFav,
-                downloadStatus = currentStatus,
-                onFavoriteToggle = { viewModel.toggleFavorite(wp) },
-                onDownload = { viewModel.downloadWallpaper(wp) },
-                onSearchTag = { englishTag, localizedTag, scrollOffset ->
-                    viewModel.searchFromDetailTag(
-                        englishTag = englishTag,
-                        localizedTag = localizedTag,
-                        detailScrollOffset = scrollOffset
-                    )
-                    if (searchGridState.firstVisibleItemIndex > 0 || searchGridState.firstVisibleItemScrollOffset > 0) {
-                        coroutineScope.launch { searchGridState.scrollToItem(0) }
-                    }
-                },
-                onSearchColor = { hex, scrollOffset ->
-                    viewModel.searchFromDetailColor(
-                        colorHex = hex,
-                        detailScrollOffset = scrollOffset
-                    )
-                    if (searchGridState.firstVisibleItemIndex > 0 || searchGridState.firstVisibleItemScrollOffset > 0) {
-                        coroutineScope.launch { searchGridState.scrollToItem(0) }
-                    }
-                },
-                onDismiss = viewModel::dismissDetailSheet,
-                hapticHelper = viewModel.hapticHelper,
-                wallpaperSetHelper = viewModel.wallpaperSetHelper,
-                tagTranslator = viewModel::translateTag,
-                tagTranslations = tagTranslations,
-                isTagLocalizationEnabled = isTagLocalizationEnabled,
-                initialScrollOffset = pendingDetailScrollOffset,
-                onScrollRestored = viewModel::consumePendingDetailScroll,
-                isRestoredFromSearch = true
-            )
-        }
-    }
-
-    if (selectedWallpaper != null && !isRestoredFromDetailReturn) {
-        val wp = selectedWallpaper ?: return
+    selectedWallpaper?.let { wp ->
         val currentStatus by remember(viewModel, wp.id) {
             viewModel.downloadStatusMap.map { it[wp.id] }.distinctUntilChanged()
         }.collectAsStateWithLifecycle(null)
@@ -640,8 +594,7 @@ private fun WallpaperDetailOverlay(
             tagTranslations = tagTranslations,
             isTagLocalizationEnabled = isTagLocalizationEnabled,
             initialScrollOffset = pendingDetailScrollOffset,
-            onScrollRestored = viewModel::consumePendingDetailScroll,
-            isRestoredFromSearch = false
+            onScrollRestored = viewModel::consumePendingDetailScroll
         )
     }
 }

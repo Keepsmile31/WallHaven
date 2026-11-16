@@ -2,4 +2,7 @@ WallHaven.cc是一个世界顶级的免费高清壁纸网站，由于其仅有�
 
 WallHaven客户端并非官方所为，但其内容完全依托于WallHaven.cc开放API接口，客户端并未对WallHaven.cc壁纸图片做任何的压缩、剪切和改动，壁纸图片的一切操作权利还是归WallHaven.cc所有，请勿恶意滥用！
 
-Telegram：https://t.me/WallHaven8
+功能
+
+MD3 设计：表现力设计、动态取色、自适应布局、悬浮底栏
+备份与恢复：本地备份 + WebDAV 自动备份

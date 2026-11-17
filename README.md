@@ -15,7 +15,7 @@
 [![Stars](https://img.shields.io/github/stars/Keepsmile31/WallHaven?style=flat-square&color=EAB308)](https://github.com/Keepsmile31/WallHaven/stargazers)
 [![Downloads](https://img.shields.io/github/downloads/Keepsmile31/WallHaven/total?style=flat-square&color=0EA5E9)](https://github.com/Keepsmile31/WallHaven/releases)
 
-[✨ 功能特性](#-核心功能) · [📥 下载安装](#-下载安装) · [🎨 视觉与交互](#-视觉与交互设计) · [🛠️ 技术栈](#️-技术栈与架构) · [📦 本地构建](#-本地构建) · [⚠️ 免责声明](#️-免责声明)
+[✨ 功能特性](#-核心功能) · [📥 下载安装](#-下载安装) · [🎨 视觉与交互](#-视觉与交互设计) · [🛠️ 技术栈](#️-技术栈与架构) · [⚠️ 免责声明](#️-免责声明)
 
 </div>
 

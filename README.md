@@ -90,24 +90,6 @@
 
 ---
 
-## 📦 本地构建
-
-1. **克隆仓库**
-   ```bash
-   git clone https://github.com/Keepsmile31/WallHaven.git
-   cd WallHaven
-   ```
-2. **使用 Android Studio 或命令行构建**
-   ```bash
-   ./gradlew assembleDebug
-   ```
-3. **运行单元测试与 Robolectric UI 测试**
-   ```bash
-   ./gradlew testDebugUnitTest
-   ```
-
----
-
 ## 💬 交流与反馈
 
 - 🐛 **问题反馈与建议**：欢迎提交 [GitHub Issues](https://github.com/Keepsmile31/WallHaven/issues)，如遇到崩溃或异常，建议附上设置页导出的调试日志。

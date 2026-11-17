@@ -20,8 +20,11 @@ import com.example.ui.components.MIN_FULLSCREEN_ZOOM
 import com.example.ui.components.ZoomableFullscreenViewer
 import com.example.ui.components.calculateZoomedOffset
 import com.example.ui.components.clampZoomOffset
+import com.example.ui.components.computeSubsampleSize
+import com.example.ui.components.computeVisibleTiles
 import com.example.ui.theme.WallhavenTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -236,5 +239,51 @@ class FullscreenZoomTest {
         }
         composeTestRule.waitForIdle()
         assertEquals(1, closedCount)
+    }
+
+    @Test
+    fun `computeSubsampleSize activates native tiles only when zoomed beyond base bitmap resolution`() {
+        // 1080p image decoded at full 1920x1080 needs no extra tile decoding
+        assertNull(computeSubsampleSize(originalWidth = 1920, baseWidth = 1920, scaledWidthOnScreen = 3240f))
+
+        // Ultra-HD 7717x4341 decoded with base 4096px:
+        // At 1.0x (1080px) or 2.0x (2160px), 4096px base already supersamples screen
+        assertNull(computeSubsampleSize(originalWidth = 7717, baseWidth = 4096, scaledWidthOnScreen = 1080f))
+        assertNull(computeSubsampleSize(originalWidth = 7717, baseWidth = 4096, scaledWidthOnScreen = 2160f))
+
+        // At 3.0x double-tap (3240px) and 8.0x (8640px), sampleSize=1 activates full 7717x4341 tiles
+        assertEquals(1, computeSubsampleSize(originalWidth = 7717, baseWidth = 4096, scaledWidthOnScreen = 3240f))
+        assertEquals(1, computeSubsampleSize(originalWidth = 7717, baseWidth = 4096, scaledWidthOnScreen = 8640f))
+
+        // 16000px image uses sampleSize=2 at 3240px (8000px > 4096px) and sampleSize=1 at 6480px
+        assertEquals(2, computeSubsampleSize(originalWidth = 16000, baseWidth = 4096, scaledWidthOnScreen = 3240f))
+        assertEquals(1, computeSubsampleSize(originalWidth = 16000, baseWidth = 4096, scaledWidthOnScreen = 6480f))
+    }
+
+    @Test
+    fun `computeVisibleTiles covers visible viewport contiguously within original bounds`() {
+        val tiles = computeVisibleTiles(
+            origW = 7717,
+            origH = 4341,
+            containerW = 1080f,
+            containerH = 2400f,
+            scaledW = 3240f,
+            scaledH = 1822.8f,
+            imgLeft = -1080f,
+            imgTop = 288.6f,
+            sampleSize = 1,
+            tileOutputPx = 768
+        )
+        assertTrue(tiles.isNotEmpty())
+        tiles.forEach { spec ->
+            assertTrue(spec.srcRect.left >= 0)
+            assertTrue(spec.srcRect.top >= 0)
+            assertTrue(spec.srcRect.right <= 7717)
+            assertTrue(spec.srcRect.bottom <= 4341)
+            assertTrue(spec.srcRect.width() > 0)
+            assertTrue(spec.srcRect.height() > 0)
+        }
+        // Center of 7717x4341 (~3858, ~2170) must be covered by the visible tiles
+        assertTrue(tiles.any { it.srcRect.contains(3858, 2170) })
     }
 }

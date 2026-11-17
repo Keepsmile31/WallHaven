@@ -107,16 +107,18 @@ class AppUpdateRepository(
             val resolvedDownloadUrl = apkAsset?.browserDownloadUrl?.takeIf { it.isNotBlank() }
                 ?: htmlUrl.ifBlank { "https://github.com/Keepsmile31/WallHaven/releases" }
             val normalizedVer = UpdatePrefs.normalizeVersionTag(tagName)
+            val safeTitle = name.orEmpty().trim()
+            val safeBody = body.orEmpty().trim()
             return AppUpdateInfo(
                 tagName = tagName.trim(),
                 versionName = normalizedVer.ifBlank { tagName.trim() },
-                releaseTitle = name.takeIf { it.isNotBlank() } ?: tagName.trim(),
-                releaseNotes = body.ifBlank { "本次更新包含功能优化与稳定性改进。" },
+                releaseTitle = safeTitle.ifBlank { tagName.trim() },
+                releaseNotes = safeBody.ifBlank { "本次更新包含功能优化与稳定性改进。" },
                 htmlUrl = htmlUrl.ifBlank { "https://github.com/Keepsmile31/WallHaven/releases" },
                 apkDownloadUrl = resolvedDownloadUrl,
                 apkFileName = apkAsset?.name.orEmpty(),
                 apkSizeBytes = apkAsset?.size ?: 0L,
-                publishedAt = publishedAt
+                publishedAt = publishedAt.orEmpty()
             )
         }
     }

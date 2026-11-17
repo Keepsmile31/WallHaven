@@ -54,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -86,6 +87,7 @@ import com.example.ui.components.ExploreLiquidGlassCircleButton
 import com.example.ui.components.ExploreLiquidGlassTabs
 import com.example.util.CacheManager
 import com.example.util.HapticHelper
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -107,6 +109,7 @@ fun HistoryScreen(
     downloadListState: LazyListState = rememberLazyListState()
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     var isBatchMode by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf(setOf<String>()) }
@@ -492,7 +495,17 @@ fun HistoryScreen(
                         selectedIndex = selectedTab,
                         onSelect = { index ->
                             hapticHelper?.vibrateTick()
-                            selectedTab = index
+                            if (index == selectedTab) {
+                                coroutineScope.launch {
+                                    if (selectedTab == 0) {
+                                        browseListState.animateScrollToItem(0)
+                                    } else {
+                                        downloadListState.animateScrollToItem(0)
+                                    }
+                                }
+                            } else {
+                                selectedTab = index
+                            }
                         },
                         backdropLayer = backdropLayer,
                         testTagForTab = { index ->

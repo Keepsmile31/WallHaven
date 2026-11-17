@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicBoolean
 
 enum class TabType(val id: Int) {
     LATEST(0),
@@ -158,7 +159,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _pendingUpdateInfo = MutableStateFlow<AppUpdateInfo?>(null)
     val pendingUpdateInfo = _pendingUpdateInfo.asStateFlow()
-    private var hasCheckedColdStartUpdate = false
+    private val hasCheckedColdStartUpdate = AtomicBoolean(false)
 
     val settings: StateFlow<AppSettings> = preferencesManager.settingsFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
@@ -863,11 +864,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun checkForUpdatesOnColdStart() {
-        if (hasCheckedColdStartUpdate) return
-        hasCheckedColdStartUpdate = true
+    fun checkForUpdatesOnColdStart(repository: AppUpdateRepository = appUpdateRepository) {
+        if (!hasCheckedColdStartUpdate.compareAndSet(false, true)) return
         viewModelScope.launch {
-            val result = appUpdateRepository.checkForUpdate(isColdStart = true)
+            val result = repository.checkForUpdate(isColdStart = true)
             if (result is UpdateCheckResult.UpdateAvailable) {
                 _pendingUpdateInfo.value = result.info
             }

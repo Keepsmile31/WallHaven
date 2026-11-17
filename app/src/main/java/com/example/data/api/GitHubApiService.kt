@@ -9,10 +9,10 @@ import retrofit2.http.GET
 @JsonClass(generateAdapter = true)
 data class GitHubReleaseDto(
     @param:Json(name = "tag_name") val tagName: String = "",
-    @param:Json(name = "name") val name: String = "",
-    @param:Json(name = "body") val body: String = "",
+    @param:Json(name = "name") val name: String? = null,
+    @param:Json(name = "body") val body: String? = null,
     @param:Json(name = "html_url") val htmlUrl: String = "",
-    @param:Json(name = "published_at") val publishedAt: String = "",
+    @param:Json(name = "published_at") val publishedAt: String? = null,
     @param:Json(name = "prerelease") val prerelease: Boolean = false,
     @param:Json(name = "draft") val draft: Boolean = false,
     @param:Json(name = "assets") val assets: List<GitHubReleaseAssetDto> = emptyList()
@@ -23,7 +23,7 @@ data class GitHubReleaseAssetDto(
     @param:Json(name = "name") val name: String = "",
     @param:Json(name = "browser_download_url") val browserDownloadUrl: String = "",
     @param:Json(name = "size") val size: Long = 0L,
-    @param:Json(name = "content_type") val contentType: String = ""
+    @param:Json(name = "content_type") val contentType: String? = null
 )
 
 interface GitHubApiService {

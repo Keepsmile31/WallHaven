@@ -93,6 +93,7 @@ import androidx.savedstate.findViewTreeSavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.size.Precision
 import com.example.R
 import com.example.data.model.WallpaperDto
 import com.example.util.CacheManager
@@ -155,20 +156,36 @@ fun WallpaperDetailSheet(
     }
     val useOriginalThumb = parsedRatio < 1.26f || parsedRatio > 1.9f
 
-    // Progressive loading with immediate full-size high-resolution image loading upon accessing page
+    // Progressive loading with separate cache keys so the inline preview never downsamples the fullscreen cache
     val cachedThumbUrl = remember(wallpaper.id, wallpaper.thumbs, useOriginalThumb) {
         wallpaper.thumbs.getThumbForRatio(useOriginalThumb).ifBlank { wallpaper.thumbs.bestThumb }
     }
-    val fullSizeImageUrl = remember(wallpaper.id) {
+    val fullSizeImageUrl = remember(wallpaper.id, wallpaper.path, wallpaper.thumbs) {
         wallpaper.path.ifBlank { wallpaper.thumbs.original ?: wallpaper.thumbs.bestThumb }
     }
-    val fullImageRequest = remember(wallpaper.id, fullSizeImageUrl, cachedThumbUrl) {
+    val previewMemoryCacheKey = remember(fullSizeImageUrl) {
+        "${fullSizeImageUrl}_sheet_preview"
+    }
+    val previewImageRequest = remember(wallpaper.id, fullSizeImageUrl, cachedThumbUrl, previewMemoryCacheKey) {
         ImageRequest.Builder(context)
             .data(fullSizeImageUrl)
             .placeholderMemoryCacheKey(cachedThumbUrl)
-            .memoryCacheKey(fullSizeImageUrl)
+            .memoryCacheKey(previewMemoryCacheKey)
             .diskCacheKey(fullSizeImageUrl)
             .crossfade(200)
+            .build()
+    }
+    var isPreviewLoading by remember(wallpaper.id) { mutableStateOf(true) }
+    val fullscreenPlaceholderKey = if (!isPreviewLoading) previewMemoryCacheKey else cachedThumbUrl
+    val fullscreenImageRequest = remember(wallpaper.id, fullSizeImageUrl, fullscreenPlaceholderKey) {
+        ImageRequest.Builder(context)
+            .data(fullSizeImageUrl)
+            .placeholderMemoryCacheKey(fullscreenPlaceholderKey)
+            .memoryCacheKey("${fullSizeImageUrl}_fullscreen_hd")
+            .diskCacheKey(fullSizeImageUrl)
+            .size(MAX_FULLSCREEN_BASE_DIMENSION, MAX_FULLSCREEN_BASE_DIMENSION)
+            .precision(Precision.INEXACT)
+            .crossfade(false)
             .build()
     }
 
@@ -293,8 +310,6 @@ fun WallpaperDetailSheet(
                 wallpaper.colors.firstOrNull()?.let { parseWallhavenHexColor(it) }
             } ?: fallbackColor
 
-            var isPreviewLoading by remember(wallpaper.id) { mutableStateOf(true) }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -308,7 +323,7 @@ fun WallpaperDetailSheet(
                     }
             ) {
                 AsyncImage(
-                    model = fullImageRequest,
+                    model = previewImageRequest,
                     contentDescription = "Wallpaper full preview",
                     contentScale = ContentScale.Fit, // Guarantees zero cropping!
                     onSuccess = { isPreviewLoading = false },
@@ -745,7 +760,7 @@ fun WallpaperDetailSheet(
             ) { visible -> if (visible) 1f else 0.92f }
 
             ZoomableFullscreenViewer(
-                imageRequest = fullImageRequest,
+                imageRequest = fullscreenImageRequest,
                 infoText = "${wallpaper.resolution} • ${CacheManager.formatBytes(wallpaper.fileSize, zeroText = "未知", mbDecimals = 2, kbDecimals = 1)}",
                 fallbackAspectRatio = parsedRatio,
                 onClose = { isFullScreenVisible = false },

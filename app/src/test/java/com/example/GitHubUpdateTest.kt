@@ -17,13 +17,16 @@ import com.example.data.preferences.AppSettings
 import com.example.data.preferences.UpdatePrefs
 import com.example.data.repository.AppUpdateRepository
 import com.example.data.repository.UpdateCheckResult
+import com.example.ui.MainViewModel
 import com.example.ui.screens.SettingsAboutScreen
 import com.example.ui.theme.WallhavenTheme
 import com.example.util.HapticHelper
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -33,6 +36,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
+import java.net.SocketTimeoutException
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp")
@@ -231,5 +235,109 @@ class GitHubUpdateTest {
         val updatePanIntent = shadowOf(ApplicationProvider.getApplicationContext<Application>()).nextStartedActivity
         assertEquals(Intent.ACTION_VIEW, updatePanIntent?.action)
         assertEquals("https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3", updatePanIntent?.dataString)
+    }
+
+    @Test
+    fun `MainViewModel checkForUpdatesOnColdStart runs once per session and populates pendingUpdateInfo`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val viewModel = MainViewModel(app)
+        var callCount = 0
+        val fakeApi = object : GitHubApiService {
+            override suspend fun getLatestRelease(): GitHubReleaseDto {
+                callCount++
+                return GitHubReleaseDto(
+                    tagName = "v2.7.0",
+                    name = null,
+                    body = null,
+                    htmlUrl = "https://github.com/Keepsmile31/WallHaven/releases/tag/v2.7.0"
+                )
+            }
+        }
+        val prefs = UpdatePrefs(context, todayProvider = { "2026-11-16" })
+        val repo = AppUpdateRepository(
+            updatePrefs = prefs,
+            apiService = fakeApi,
+            currentVersionProvider = { "2.6.2" },
+            ioDispatcher = Dispatchers.Unconfined
+        )
+
+        // Trigger multiple times to simulate recomposition/rotation/tab switching
+        viewModel.checkForUpdatesOnColdStart(repo)
+        viewModel.checkForUpdatesOnColdStart(repo)
+        viewModel.checkForUpdatesOnColdStart(repo)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+
+        assertEquals(1, callCount)
+        val pending = viewModel.pendingUpdateInfo.value
+        assertNotNull(pending)
+        assertEquals("v2.7.0", pending?.tagName)
+        assertEquals("本次更新包含功能优化与稳定性改进。", pending?.releaseNotes)
+
+        viewModel.dismissUpdateLater()
+        assertNull(viewModel.pendingUpdateInfo.value)
+    }
+
+    @Test
+    fun `MainViewModel checkForUpdatesOnColdStart fails silently on timeout or up-to-date`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val timeoutViewModel = MainViewModel(app)
+        val timeoutApi = object : GitHubApiService {
+            override suspend fun getLatestRelease(): GitHubReleaseDto {
+                throw SocketTimeoutException("timeout")
+            }
+        }
+        val prefs = UpdatePrefs(context, todayProvider = { "2026-11-16" })
+        val timeoutRepo = AppUpdateRepository(
+            updatePrefs = prefs,
+            apiService = timeoutApi,
+            currentVersionProvider = { "2.6.2" },
+            ioDispatcher = Dispatchers.Unconfined
+        )
+
+        timeoutViewModel.checkForUpdatesOnColdStart(timeoutRepo)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+        assertNull(timeoutViewModel.pendingUpdateInfo.value)
+
+        // Failed cold-start check should NOT mark today as checked so next launch can retry
+        assertTrue(prefs.shouldAutoCheckOnColdStart())
+
+        val upToDateViewModel = MainViewModel(app)
+        val upToDateApi = object : GitHubApiService {
+            override suspend fun getLatestRelease(): GitHubReleaseDto {
+                return GitHubReleaseDto(tagName = "v2.6.2")
+            }
+        }
+        val upToDateRepo = AppUpdateRepository(
+            updatePrefs = prefs,
+            apiService = upToDateApi,
+            currentVersionProvider = { "2.6.2" },
+            ioDispatcher = Dispatchers.Unconfined
+        )
+        upToDateViewModel.checkForUpdatesOnColdStart(upToDateRepo)
+        shadowOf(android.os.Looper.getMainLooper()).idle()
+        assertNull(upToDateViewModel.pendingUpdateInfo.value)
+    }
+
+    @Test
+    fun `GitHubReleaseDto deserializes JSON with null name, body, and published_at safely`() {
+        val moshi = Moshi.Builder().build()
+        val adapter = moshi.adapter(GitHubReleaseDto::class.java)
+        val json = """
+            {
+              "tag_name": "v2.7.0",
+              "name": null,
+              "body": null,
+              "html_url": "https://github.com/Keepsmile31/WallHaven/releases/tag/v2.7.0",
+              "published_at": null,
+              "prerelease": false,
+              "draft": false,
+              "assets": []
+            }
+        """.trimIndent()
+        val dto = adapter.fromJson(json)
+        assertNotNull(dto)
+        assertEquals("v2.7.0", dto?.tagName)
+        assertNull(dto?.name)
+        assertNull(dto?.body)
     }
 }

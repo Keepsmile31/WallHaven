@@ -35,6 +35,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -70,6 +71,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -99,7 +101,8 @@ fun ExploreLiquidGlassTabs(
     backdropLayer: GraphicsLayer?,
     modifier: Modifier = Modifier,
     liquidGlassMode: String = LocalLiquidGlassMode.current,
-    testTagForTab: (Int) -> String = { "explore_tab_$it" }
+    testTagForTab: (Int) -> String = { "explore_tab_$it" },
+    onDoubleTap: ((Int) -> Unit)? = null
 ) {
     val isDarkTheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
     val backdropBaseColor = MaterialTheme.colorScheme.background
@@ -108,26 +111,34 @@ fun ExploreLiquidGlassTabs(
     val haptic = LocalHapticFeedback.current
 
     val safeCount = tabs.size.coerceAtLeast(1)
-    val clampedIndex = selectedIndex.coerceIn(0, safeCount - 1)
+    val selectedSlot = tabs.indexOfFirst { it.first == selectedIndex }
+        .let { if (it >= 0) it else selectedIndex.coerceIn(0, safeCount - 1) }
+    val clampedIndex = tabs.getOrNull(selectedSlot)?.first ?: selectedIndex
     val currentSelectedState = rememberUpdatedState(clampedIndex)
+    val currentSelectedSlotState = rememberUpdatedState(selectedSlot)
+    val currentTabsState = rememberUpdatedState(tabs)
     val currentOnSelectState = rememberUpdatedState(onSelect)
+    val currentOnDoubleTapState = rememberUpdatedState(onDoubleTap)
+
+    var lastTapTab by remember { mutableStateOf<Int?>(null) }
+    var lastTapUptimeMs by remember { mutableLongStateOf(0L) }
 
     var isDragging by remember { mutableStateOf(false) }
     var isActiveSlotPressed by remember { mutableStateOf(false) }
     var isTapPulsing by remember { mutableStateOf(false) }
-    var dragFraction by remember { mutableFloatStateOf(clampedIndex.toFloat()) }
-    var lastHapticTab by remember { mutableIntStateOf(clampedIndex) }
-    var lastSelectedTab by remember { mutableIntStateOf(clampedIndex) }
+    var dragFraction by remember { mutableFloatStateOf(selectedSlot.toFloat()) }
+    var lastHapticTab by remember { mutableIntStateOf(selectedSlot) }
+    var lastSelectedTab by remember { mutableIntStateOf(selectedSlot) }
     val barPosInRootState = remember { mutableStateOf(Offset.Zero) }
     var barSizePx by remember { mutableStateOf(IntSize.Zero) }
 
-    LaunchedEffect(clampedIndex) {
+    LaunchedEffect(selectedSlot) {
         if (!isDragging) {
-            dragFraction = clampedIndex.toFloat()
-            lastHapticTab = clampedIndex
+            dragFraction = selectedSlot.toFloat()
+            lastHapticTab = selectedSlot
         }
-        if (clampedIndex != lastSelectedTab) {
-            lastSelectedTab = clampedIndex
+        if (selectedSlot != lastSelectedTab) {
+            lastSelectedTab = selectedSlot
             if (!isDragging) {
                 isTapPulsing = true
                 kotlinx.coroutines.delay(260)
@@ -136,7 +147,7 @@ fun ExploreLiquidGlassTabs(
         }
     }
 
-    val targetFraction = if (isDragging) dragFraction else clampedIndex.toFloat()
+    val targetFraction = if (isDragging) dragFraction else selectedSlot.toFloat()
     val animatedFractionState = animateFloatAsState(
         targetValue = targetFraction,
         animationSpec = if (isDragging) {
@@ -412,15 +423,15 @@ fun ExploreLiquidGlassTabs(
                             velocityTracker.addPosition(down.uptimeMillis, down.position)
 
                             val touchSlop = viewConfiguration.touchSlop
-                            val activeIndexAtDown = currentSelectedState.value
+                            val activeSlotAtDown = currentSelectedSlotState.value
                             val pointerTabAtDown =
                                 (down.position.x / itemWidthPx - 0.5f).coerceIn(0f, (safeCount - 1).toFloat())
-                            val nearActiveSlot = abs(pointerTabAtDown - activeIndexAtDown) <= 0.65f
+                            val nearActiveSlot = abs(pointerTabAtDown - activeSlotAtDown) <= 0.65f
                             if (nearActiveSlot) {
                                 isActiveSlotPressed = true
                             }
                             val startAnchor = if (nearActiveSlot) {
-                                activeIndexAtDown.toFloat()
+                                activeSlotAtDown.toFloat()
                             } else {
                                 pointerTabAtDown
                             }
@@ -428,11 +439,15 @@ fun ExploreLiquidGlassTabs(
                             var totalDx = 0f
                             var dragStarted = false
                             var lastPosition = down.position
+                            var lastEventUptimeMs = down.uptimeMillis
 
                             while (true) {
                                 val event = awaitPointerEvent(PointerEventPass.Main)
                                 val change = event.changes.firstOrNull { it.id == down.id }
                                     ?: event.changes.firstOrNull()
+                                if (change != null) {
+                                    lastEventUptimeMs = change.uptimeMillis
+                                }
                                 if (change == null || !change.pressed) {
                                     break
                                 }
@@ -445,7 +460,7 @@ fun ExploreLiquidGlassTabs(
                                 if (!dragStarted && abs(totalDx) > touchSlop) {
                                     dragStarted = true
                                     isDragging = true
-                                    lastHapticTab = activeIndexAtDown
+                                    lastHapticTab = activeSlotAtDown
                                 }
 
                                 if (dragStarted) {
@@ -463,26 +478,43 @@ fun ExploreLiquidGlassTabs(
 
                             isActiveSlotPressed = false
                             if (dragStarted) {
+                                lastTapTab = null
+                                lastTapUptimeMs = 0L
                                 val velocityX = velocityTracker.calculateVelocity().x
                                 val velocityBias = if (abs(velocityX) > 650f) {
                                     sign(velocityX) * 0.35f
                                 } else {
                                     0f
                                 }
-                                val targetTab = (dragFraction + velocityBias)
+                                val targetSlot = (dragFraction + velocityBias)
                                     .roundToInt()
                                     .coerceIn(0, safeCount - 1)
+                                val targetTab = currentTabsState.value.getOrNull(targetSlot)?.first ?: targetSlot
                                 isDragging = false
                                 if (targetTab != currentSelectedState.value) {
                                     currentOnSelectState.value(targetTab)
                                 }
                             } else {
-                                val tappedTab = (lastPosition.x / itemWidthPx)
+                                val tappedSlot = (lastPosition.x / itemWidthPx)
                                     .toInt()
                                     .coerceIn(0, safeCount - 1)
+                                val tappedTab = currentTabsState.value.getOrNull(tappedSlot)?.first ?: tappedSlot
                                 isDragging = false
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                currentOnSelectState.value(tappedTab)
+
+                                val doubleTapHandler = currentOnDoubleTapState.value
+                                val isDoubleTap = doubleTapHandler != null &&
+                                    lastTapTab == tappedTab &&
+                                    (lastEventUptimeMs - lastTapUptimeMs) in 0L..viewConfiguration.doubleTapTimeoutMillis
+                                if (isDoubleTap) {
+                                    lastTapTab = null
+                                    lastTapUptimeMs = 0L
+                                    doubleTapHandler.invoke(tappedTab)
+                                } else {
+                                    lastTapTab = tappedTab
+                                    lastTapUptimeMs = lastEventUptimeMs
+                                    currentOnSelectState.value(tappedTab)
+                                }
                             }
                         }
                     }
@@ -524,15 +556,19 @@ fun ExploreLiquidGlassTabs(
                         },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    tabs.forEach { (index, title) ->
+                    tabs.forEachIndexed { slotIndex, (index, title) ->
                         LiquidGlassTabItem(
-                            index = index,
+                            slotIndex = slotIndex,
                             title = title,
                             isSelected = clampedIndex == index,
                             isLensElevated = isLensElevated,
                             animatedFractionState = animatedFractionState,
                             unselectedColor = onSurfaceVariant,
                             selectedColor = primaryColor,
+                            onAccessibilityClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                currentOnSelectState.value(index)
+                            },
                             testTag = testTagForTab(index)
                         )
                     }
@@ -564,20 +600,21 @@ fun ExploreLiquidGlassTabs(
 
 @Composable
 private fun RowScope.LiquidGlassTabItem(
-    index: Int,
+    slotIndex: Int,
     title: String,
     isSelected: Boolean,
     isLensElevated: Boolean,
     animatedFractionState: State<Float>,
     unselectedColor: Color,
     selectedColor: Color,
+    onAccessibilityClick: () -> Unit,
     testTag: String
 ) {
-    val proximityState = remember(index) {
-        derivedStateOf { (1f - abs(animatedFractionState.value - index)).coerceIn(0f, 1f) }
+    val proximityState = remember(slotIndex) {
+        derivedStateOf { (1f - abs(animatedFractionState.value - slotIndex)).coerceIn(0f, 1f) }
     }
-    val isActiveVisual by remember(index) {
-        derivedStateOf { abs(animatedFractionState.value - index) < 0.5f }
+    val isActiveVisual by remember(slotIndex) {
+        derivedStateOf { abs(animatedFractionState.value - slotIndex) < 0.5f }
     }
     val proximity = proximityState.value
     val textColor = lerp(unselectedColor, selectedColor, proximity)
@@ -595,6 +632,10 @@ private fun RowScope.LiquidGlassTabItem(
             .semantics {
                 role = Role.Tab
                 selected = isSelected
+                onClick(label = title) {
+                    onAccessibilityClick()
+                    true
+                }
             }
             .testTag(testTag)
     ) {

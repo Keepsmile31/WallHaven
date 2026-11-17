@@ -41,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,6 +68,7 @@ import com.example.ui.components.FilterState
 import com.example.ui.components.RestrictedApiKeyDialog
 import com.example.ui.components.WallpaperCard
 import com.example.util.HapticHelper
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +97,7 @@ fun ExploreScreen(
     var showFilterSheet by remember { mutableStateOf(false) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
 
     val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val cutoutPadding = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
@@ -342,7 +345,42 @@ fun ExploreScreen(
                         selectedIndex = currentSubTab,
                         onSelect = { index ->
                             hapticHelper.vibrateTick()
-                            onSelectSubTab(index)
+                            if (index == currentSubTab) {
+                                val isAtTop = gridState.firstVisibleItemIndex == 0 &&
+                                    gridState.firstVisibleItemScrollOffset == 0
+                                coroutineScope.launch {
+                                    gridState.animateScrollToItem(0)
+                                }
+                                if (isAtTop && index != 2 && !isLoading) {
+                                    onRetry()
+                                }
+                            } else {
+                                onSelectSubTab(index)
+                            }
+                        },
+                        onDoubleTap = { index ->
+                            hapticHelper.vibrateTick()
+                            if (index == 2) {
+                                coroutineScope.launch {
+                                    gridState.animateScrollToItem(0)
+                                }
+                                if (currentSubTab != 2) {
+                                    onSelectSubTab(2)
+                                } else {
+                                    onRetry()
+                                }
+                            } else if (index == currentSubTab) {
+                                val isAtTop = gridState.firstVisibleItemIndex == 0 &&
+                                    gridState.firstVisibleItemScrollOffset == 0
+                                coroutineScope.launch {
+                                    gridState.animateScrollToItem(0)
+                                }
+                                if (isAtTop && !isLoading) {
+                                    onRetry()
+                                }
+                            } else {
+                                onSelectSubTab(index)
+                            }
                         },
                         backdropLayer = backdropLayer,
                         modifier = Modifier.weight(1f)

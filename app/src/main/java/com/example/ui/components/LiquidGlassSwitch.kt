@@ -234,7 +234,7 @@ fun LiquidGlassSwitch(
         modifier = modifier
             .width(containerWidthDp)
             .height(containerHeightDp)
-            .semantics {
+            .semantics(mergeDescendants = true) {
                 role = Role.Switch
                 toggleableState = ToggleableState(checked)
             }

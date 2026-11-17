@@ -124,7 +124,11 @@ internal fun SettingsAppearanceScreen(
 
     SubPageScaffold(
         title = stringResource(R.string.settings_appearance),
-        onBack = onBack
+        onBack = onBack,
+        sharedRouteKey = SettingsRoutes.APPEARANCE,
+        icon = ImageVector.vectorResource(R.drawable.ic_palette),
+        iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+        iconTint = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
         M3SettingsCard {
             val toggleDynamic = {
@@ -567,7 +571,11 @@ internal fun SettingsContentScreen(
 
     SubPageScaffold(
         title = "内容与浏览",
-        onBack = onBack
+        onBack = onBack,
+        sharedRouteKey = SettingsRoutes.CONTENT,
+        icon = ImageVector.vectorResource(R.drawable.ic_tune),
+        iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+        iconTint = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
         M3SettingsSectionTitle(title = "身份与 API Key", icon = ImageVector.vectorResource(R.drawable.ic_key))
         M3SettingsCard {
@@ -919,7 +927,11 @@ internal fun SettingsStorageScreen(
 
     SubPageScaffold(
         title = stringResource(R.string.settings_storage),
-        onBack = onBack
+        onBack = onBack,
+        sharedRouteKey = SettingsRoutes.STORAGE,
+        icon = ImageVector.vectorResource(R.drawable.ic_storage),
+        iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        iconTint = MaterialTheme.colorScheme.onTertiaryContainer
     ) {
         M3SettingsSectionTitle(title = "缓存管理", icon = ImageVector.vectorResource(R.drawable.ic_clean_hands))
         M3SettingsCard {

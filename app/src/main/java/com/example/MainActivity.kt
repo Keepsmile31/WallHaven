@@ -12,14 +12,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
@@ -43,7 +42,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,12 +71,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.WallpaperDto
 import com.example.data.preferences.AppSettings
 import com.example.ui.MainViewModel
 import com.example.ui.components.AppUpdateDialog
 import com.example.ui.components.DisclaimerDialog
 import com.example.ui.components.FloatingCapsuleNavigationBar
+import com.example.ui.components.LocalDetailTransitionScope
 import com.example.ui.components.LocalLiquidGlassMode
+import com.example.ui.components.LocalSearchHistoryTransitionScope
+import com.example.ui.components.LocalSharedTransitionScope
 import com.example.ui.components.NavBarDestination
 import com.example.ui.components.SafeTextToolbarProvider
 import com.example.ui.components.WallpaperDetailSheet
@@ -95,7 +100,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -283,6 +288,30 @@ class MainActivity : ComponentActivity() {
                             }
                         ) { _ ->
                             val surfaceBackgroundColor = MaterialTheme.colorScheme.background
+                            val selectedWallpaper by viewModel.selectedWallpaper.collectAsStateWithLifecycle()
+                            val activeWallpaperCache = remember { mutableStateMapOf<String, WallpaperDto>() }
+                            selectedWallpaper?.let { current ->
+                                activeWallpaperCache[current.id] = current
+                            }
+                            SideEffect {
+                                val currentId = selectedWallpaper?.id
+                                if (activeWallpaperCache.size > 4) {
+                                    activeWallpaperCache.keys
+                                        .filter { it != currentId }
+                                        .dropLast(1)
+                                        .forEach { activeWallpaperCache.remove(it) }
+                                }
+                            }
+                            val detailSourceOrigin = remember(currentTab) {
+                                when (currentTab) {
+                                    0 -> "explore"
+                                    1 -> "search"
+                                    2 -> "favorites"
+                                    3 -> "history"
+                                    else -> "other"
+                                }
+                            }
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -294,51 +323,79 @@ class MainActivity : ComponentActivity() {
                                         drawLayer(backdropLayer)
                                     }
                             ) {
-                                Crossfade(
-                                    targetState = currentTab,
-                                    animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
-                                    label = "nav_tab_crossfade"
-                                ) { tab ->
-                                    saveableStateHolder.SaveableStateProvider(key = tab) {
-                                        when (tab) {
-                                            0 -> ExploreTabContent(
-                                                viewModel = viewModel,
-                                                settings = settings,
-                                                gridState = exploreGridState
-                                            )
+                                SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
+                                    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+                                        AnimatedContent(
+                                            targetState = selectedWallpaper?.id,
+                                            transitionSpec = {
+                                                fadeIn(tween(240, easing = FastOutSlowInEasing))
+                                                    .togetherWith(fadeOut(tween(180, easing = FastOutSlowInEasing)))
+                                            },
+                                            label = "wallpaper_detail_shared_transition"
+                                        ) { activeWallpaperId ->
+                                            CompositionLocalProvider(
+                                                LocalDetailTransitionScope provides this@AnimatedContent
+                                            ) {
+                                                if (activeWallpaperId == null) {
+                                                    AnimatedContent(
+                                                        targetState = currentTab,
+                                                        transitionSpec = {
+                                                            fadeIn(tween(160, easing = FastOutSlowInEasing))
+                                                                .togetherWith(fadeOut(tween(140, easing = FastOutSlowInEasing)))
+                                                        },
+                                                        label = "nav_tab_transition"
+                                                    ) { tab ->
+                                                        saveableStateHolder.SaveableStateProvider(key = tab) {
+                                                            when (tab) {
+                                                                0 -> ExploreTabContent(
+                                                                    viewModel = viewModel,
+                                                                    settings = settings,
+                                                                    gridState = exploreGridState
+                                                                )
 
-                                            1 -> SearchTabContent(
-                                                viewModel = viewModel,
-                                                settings = settings,
-                                                gridState = searchGridState
-                                            )
+                                                                1 -> SearchTabContent(
+                                                                    viewModel = viewModel,
+                                                                    settings = settings,
+                                                                    gridState = searchGridState
+                                                                )
 
-                                            2 -> FavoritesTabContent(
-                                                viewModel = viewModel,
-                                                gridState = favoritesGridState
-                                            )
+                                                                2 -> FavoritesTabContent(
+                                                                    viewModel = viewModel,
+                                                                    gridState = favoritesGridState
+                                                                )
 
-                                            3 -> HistoryTabContent(
-                                                viewModel = viewModel,
-                                                browseListState = historyBrowseListState,
-                                                downloadListState = historyDownloadListState
-                                            )
+                                                                3 -> HistoryTabContent(
+                                                                    viewModel = viewModel,
+                                                                    browseListState = historyBrowseListState,
+                                                                    downloadListState = historyDownloadListState
+                                                                )
 
-                                            4 -> SettingsTabContent(
-                                                viewModel = viewModel,
-                                                settings = settings,
-                                                mainScrollState = settingsMainScrollState
-                                            )
+                                                                4 -> SettingsTabContent(
+                                                                    viewModel = viewModel,
+                                                                    settings = settings,
+                                                                    mainScrollState = settingsMainScrollState
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                } else {
+                                                    val wp = selectedWallpaper?.takeIf { it.id == activeWallpaperId }
+                                                        ?: activeWallpaperCache[activeWallpaperId]
+                                                    if (wp != null) {
+                                                        WallpaperDetailOverlay(
+                                                            wallpaper = wp,
+                                                            sharedOrigin = detailSourceOrigin,
+                                                            viewModel = viewModel,
+                                                            isTagLocalizationEnabled = settings.tagLocalization,
+                                                            searchGridState = searchGridState,
+                                                            coroutineScope = coroutineScope
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
-
-                                WallpaperDetailOverlay(
-                                    viewModel = viewModel,
-                                    isTagLocalizationEnabled = settings.tagLocalization,
-                                    searchGridState = searchGridState,
-                                    coroutineScope = coroutineScope
-                                )
                             }
                         }
                     }
@@ -419,63 +476,60 @@ private fun SearchTabContent(
     AnimatedContent(
         targetState = showAllSearchHistory,
         transitionSpec = {
-            if (targetState) {
-                (slideInHorizontally(tween(220)) { it / 5 } + fadeIn(tween(220)))
-                    .togetherWith(slideOutHorizontally(tween(180)) { -it / 8 } + fadeOut(tween(180)))
-            } else {
-                (slideInHorizontally(tween(220)) { -it / 5 } + fadeIn(tween(220)))
-                    .togetherWith(slideOutHorizontally(tween(180)) { it / 5 } + fadeOut(tween(180)))
-            }
+            fadeIn(tween(240, easing = FastOutSlowInEasing))
+                .togetherWith(fadeOut(tween(180, easing = FastOutSlowInEasing)))
         },
         label = "search_subpage_transition"
     ) { showingAllHistory ->
-        if (showingAllHistory) {
-            SearchHistoryScreen(
-                searchHistory = searchHistory,
-                hapticHelper = viewModel.hapticHelper,
-                onBack = { showAllSearchHistory = false },
-                onSelectQuery = { query ->
-                    showAllSearchHistory = false
-                    viewModel.selectSearchHistory(query)
-                },
-                onDeleteQuery = viewModel::deleteSearchHistoryItem,
-                onBatchDeleteQueries = viewModel::batchDeleteSearchHistory,
-                onClearAll = viewModel::clearSearchHistory
-            )
-        } else {
-            SearchScreen(
-                searchQuery = searchQuery,
-                onQueryChange = viewModel::onSearchQueryChange,
-                onClearSearch = viewModel::clearSearch,
-                onPerformSearch = remember(viewModel) { { viewModel.performSearch(reset = true) } },
-                wallpapers = searchResults,
-                isLoading = isSearchLoading,
-                isEndReached = isSearchEndReached,
-                errorMessage = searchError,
-                favoriteIds = favoriteIds,
-                filterState = searchFilterState,
-                selectedColor = selectedColor,
-                hasApiKey = settings.apiKey.isNotBlank(),
-                onApplyFilter = viewModel::applySearchFilter,
-                onResetFilter = viewModel::resetSearchFilter,
-                onRemoveSingleFilter = viewModel::removeSingleSearchFilter,
-                onSelectColor = viewModel::setSearchColor,
-                onLoadMore = remember(viewModel) { { viewModel.performSearch(reset = false) } },
-                onWallpaperClick = viewModel::selectWallpaper,
-                onFavoriteToggle = viewModel::toggleFavorite,
-                onNavigateToSettings = remember(viewModel) { { viewModel.selectTab(4) } },
-                hapticHelper = viewModel.hapticHelper,
-                showFavoritesCount = settings.showFavoritesCount,
-                suggestions = tagSuggestions,
-                onSelectSuggestion = viewModel::selectTagSuggestion,
-                onClearSuggestions = viewModel::clearTagSuggestions,
-                searchHistory = searchHistory,
-                onSelectSearchHistory = viewModel::selectSearchHistory,
-                onDeleteSearchHistory = viewModel::deleteSearchHistoryItem,
-                onOpenAllSearchHistory = { showAllSearchHistory = true },
-                isTagLocalizationEnabled = settings.tagLocalization,
-                gridState = gridState
-            )
+        CompositionLocalProvider(LocalSearchHistoryTransitionScope provides this@AnimatedContent) {
+            if (showingAllHistory) {
+                SearchHistoryScreen(
+                    searchHistory = searchHistory,
+                    hapticHelper = viewModel.hapticHelper,
+                    onBack = { showAllSearchHistory = false },
+                    onSelectQuery = { query ->
+                        showAllSearchHistory = false
+                        viewModel.selectSearchHistory(query)
+                    },
+                    onDeleteQuery = viewModel::deleteSearchHistoryItem,
+                    onBatchDeleteQueries = viewModel::batchDeleteSearchHistory,
+                    onClearAll = viewModel::clearSearchHistory
+                )
+            } else {
+                SearchScreen(
+                    searchQuery = searchQuery,
+                    onQueryChange = viewModel::onSearchQueryChange,
+                    onClearSearch = viewModel::clearSearch,
+                    onPerformSearch = remember(viewModel) { { viewModel.performSearch(reset = true) } },
+                    wallpapers = searchResults,
+                    isLoading = isSearchLoading,
+                    isEndReached = isSearchEndReached,
+                    errorMessage = searchError,
+                    favoriteIds = favoriteIds,
+                    filterState = searchFilterState,
+                    selectedColor = selectedColor,
+                    hasApiKey = settings.apiKey.isNotBlank(),
+                    onApplyFilter = viewModel::applySearchFilter,
+                    onResetFilter = viewModel::resetSearchFilter,
+                    onRemoveSingleFilter = viewModel::removeSingleSearchFilter,
+                    onSelectColor = viewModel::setSearchColor,
+                    onLoadMore = remember(viewModel) { { viewModel.performSearch(reset = false) } },
+                    onWallpaperClick = viewModel::selectWallpaper,
+                    onFavoriteToggle = viewModel::toggleFavorite,
+                    onNavigateToSettings = remember(viewModel) { { viewModel.selectTab(4) } },
+                    hapticHelper = viewModel.hapticHelper,
+                    showFavoritesCount = settings.showFavoritesCount,
+                    suggestions = tagSuggestions,
+                    onSelectSuggestion = viewModel::selectTagSuggestion,
+                    onClearSuggestions = viewModel::clearTagSuggestions,
+                    searchHistory = searchHistory,
+                    onSelectSearchHistory = viewModel::selectSearchHistory,
+                    onDeleteSearchHistory = viewModel::deleteSearchHistoryItem,
+                    onOpenAllSearchHistory = { showAllSearchHistory = true },
+                    isTagLocalizationEnabled = settings.tagLocalization,
+                    gridState = gridState
+                )
+            }
         }
     }
 }
@@ -546,57 +600,57 @@ private fun SettingsTabContent(
 
 @Composable
 private fun WallpaperDetailOverlay(
+    wallpaper: WallpaperDto,
+    sharedOrigin: String,
     viewModel: MainViewModel,
     isTagLocalizationEnabled: Boolean,
     searchGridState: LazyStaggeredGridState,
     coroutineScope: CoroutineScope
 ) {
-    val selectedWallpaper by viewModel.selectedWallpaper.collectAsStateWithLifecycle()
     val pendingDetailScrollOffset by viewModel.pendingDetailScrollOffset.collectAsStateWithLifecycle()
-    selectedWallpaper?.let { wp ->
-        val currentStatus by remember(viewModel, wp.id) {
-            viewModel.downloadStatusMap.map { it[wp.id] }.distinctUntilChanged()
-        }.collectAsStateWithLifecycle(null)
-        val isFav by remember(viewModel, wp.id) {
-            viewModel.favoriteIds.map { wp.id in it }.distinctUntilChanged()
-        }.collectAsStateWithLifecycle(false)
-        val tagTranslations by viewModel.tagTranslations.collectAsStateWithLifecycle()
+    val currentStatus by remember(viewModel, wallpaper.id) {
+        viewModel.downloadStatusMap.map { it[wallpaper.id] }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(null)
+    val isFav by remember(viewModel, wallpaper.id) {
+        viewModel.favoriteIds.map { wallpaper.id in it }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(false)
+    val tagTranslations by viewModel.tagTranslations.collectAsStateWithLifecycle()
 
-        WallpaperDetailSheet(
-            wallpaper = wp,
-            isFavorite = isFav,
-            downloadStatus = currentStatus,
-            onFavoriteToggle = { viewModel.toggleFavorite(wp) },
-            onDownload = { viewModel.downloadWallpaper(wp) },
-            onSearchTag = { englishTag, localizedTag, scrollOffset ->
-                viewModel.searchFromDetailTag(
-                    englishTag = englishTag,
-                    localizedTag = localizedTag,
-                    detailScrollOffset = scrollOffset
-                )
-                if (searchGridState.firstVisibleItemIndex > 0 || searchGridState.firstVisibleItemScrollOffset > 0) {
-                    coroutineScope.launch { searchGridState.scrollToItem(0) }
-                }
-            },
-            onSearchColor = { hex, scrollOffset ->
-                viewModel.searchFromDetailColor(
-                    colorHex = hex,
-                    detailScrollOffset = scrollOffset
-                )
-                if (searchGridState.firstVisibleItemIndex > 0 || searchGridState.firstVisibleItemScrollOffset > 0) {
-                    coroutineScope.launch { searchGridState.scrollToItem(0) }
-                }
-            },
-            onDismiss = viewModel::dismissDetailSheet,
-            hapticHelper = viewModel.hapticHelper,
-            wallpaperSetHelper = viewModel.wallpaperSetHelper,
-            tagTranslator = viewModel::translateTag,
-            tagTranslations = tagTranslations,
-            isTagLocalizationEnabled = isTagLocalizationEnabled,
-            initialScrollOffset = pendingDetailScrollOffset,
-            onScrollRestored = viewModel::consumePendingDetailScroll
-        )
-    }
+    WallpaperDetailSheet(
+        wallpaper = wallpaper,
+        isFavorite = isFav,
+        downloadStatus = currentStatus,
+        onFavoriteToggle = { viewModel.toggleFavorite(wallpaper) },
+        onDownload = { viewModel.downloadWallpaper(wallpaper) },
+        onSearchTag = { englishTag, localizedTag, scrollOffset ->
+            viewModel.searchFromDetailTag(
+                englishTag = englishTag,
+                localizedTag = localizedTag,
+                detailScrollOffset = scrollOffset
+            )
+            if (searchGridState.firstVisibleItemIndex > 0 || searchGridState.firstVisibleItemScrollOffset > 0) {
+                coroutineScope.launch { searchGridState.scrollToItem(0) }
+            }
+        },
+        onSearchColor = { hex, scrollOffset ->
+            viewModel.searchFromDetailColor(
+                colorHex = hex,
+                detailScrollOffset = scrollOffset
+            )
+            if (searchGridState.firstVisibleItemIndex > 0 || searchGridState.firstVisibleItemScrollOffset > 0) {
+                coroutineScope.launch { searchGridState.scrollToItem(0) }
+            }
+        },
+        onDismiss = viewModel::dismissDetailSheet,
+        hapticHelper = viewModel.hapticHelper,
+        wallpaperSetHelper = viewModel.wallpaperSetHelper,
+        tagTranslator = viewModel::translateTag,
+        tagTranslations = tagTranslations,
+        isTagLocalizationEnabled = isTagLocalizationEnabled,
+        initialScrollOffset = pendingDetailScrollOffset,
+        onScrollRestored = viewModel::consumePendingDetailScroll,
+        sharedOrigin = sharedOrigin
+    )
 }
 
 @Composable

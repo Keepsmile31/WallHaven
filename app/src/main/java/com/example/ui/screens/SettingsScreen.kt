@@ -1,10 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +40,11 @@ import com.example.data.repository.AppUpdateRepository
 import com.example.ui.components.AppHeaderBar
 import com.example.util.HapticHelper
 
-private object SettingsRoutes {
+import androidx.compose.runtime.CompositionLocalProvider
+import com.example.ui.components.EnsureSharedTransitionScope
+import com.example.ui.components.LocalSettingsTransitionScope
+
+internal object SettingsRoutes {
     const val MAIN = "settings_main"
     const val APPEARANCE = "settings_appearance"
     const val CONTENT = "settings_content"
@@ -53,6 +57,7 @@ private object SettingsRoutes {
  * Two-level Jetpack Navigation settings container for WallHaven:
  * Level 1: Modular cards -> Level 2: Module sub-pages (with AlertDialogs for choices/config).
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun SettingsScreen(
     settings: AppSettings,
@@ -73,7 +78,7 @@ fun SettingsScreen(
     val clearDownloadsState = rememberUpdatedState(onClearDownloads)
 
     val navigateTo: (String) -> Unit = remember(navController, hapticHelper) {
-        var lastClickTime = -350L
+        var lastClickTime = -1000L
         { route ->
             val now = android.os.SystemClock.elapsedRealtime()
             val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -88,7 +93,7 @@ fun SettingsScreen(
     }
 
     val navigateBack: () -> Unit = remember(navController) {
-        var lastBackTime = -300L
+        var lastBackTime = -1000L
         {
             val now = android.os.SystemClock.elapsedRealtime()
             if (navController.currentBackStackEntry?.destination?.route != SettingsRoutes.MAIN && now - lastBackTime > 300L) {
@@ -98,77 +103,91 @@ fun SettingsScreen(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = SettingsRoutes.MAIN,
-        modifier = Modifier.fillMaxSize(),
-        enterTransition = {
-            slideInHorizontally(animationSpec = tween(220)) { it / 5 } + fadeIn(tween(220))
-        },
-        exitTransition = {
-            slideOutHorizontally(animationSpec = tween(180)) { -it / 8 } + fadeOut(tween(180))
-        },
-        popEnterTransition = {
-            slideInHorizontally(animationSpec = tween(220)) { -it / 5 } + fadeIn(tween(220))
-        },
-        popExitTransition = {
-            slideOutHorizontally(animationSpec = tween(180)) { it / 5 } + fadeOut(tween(180))
-        }
-    ) {
-        composable(SettingsRoutes.MAIN) {
-            SettingsMainScreen(
-                scrollState = mainScrollState,
-                onNavigate = navigateTo
-            )
-        }
+    EnsureSharedTransitionScope {
+        NavHost(
+            navController = navController,
+            startDestination = SettingsRoutes.MAIN,
+            modifier = Modifier.fillMaxSize(),
+            enterTransition = {
+                fadeIn(tween(240, easing = FastOutSlowInEasing))
+            },
+            exitTransition = {
+                fadeOut(tween(180, easing = FastOutSlowInEasing))
+            },
+            popEnterTransition = {
+                fadeIn(tween(240, easing = FastOutSlowInEasing))
+            },
+            popExitTransition = {
+                fadeOut(tween(180, easing = FastOutSlowInEasing))
+            }
+        ) {
+            composable(SettingsRoutes.MAIN) {
+                CompositionLocalProvider(LocalSettingsTransitionScope provides this@composable) {
+                    SettingsMainScreen(
+                        scrollState = mainScrollState,
+                        onNavigate = navigateTo
+                    )
+                }
+            }
 
-        composable(SettingsRoutes.APPEARANCE) {
-            SettingsAppearanceScreen(
-                settings = settingsState.value,
-                preferencesManager = preferencesManager,
-                hapticHelper = hapticHelper,
-                onBack = navigateBack
-            )
-        }
+            composable(SettingsRoutes.APPEARANCE) {
+                CompositionLocalProvider(LocalSettingsTransitionScope provides this@composable) {
+                    SettingsAppearanceScreen(
+                        settings = settingsState.value,
+                        preferencesManager = preferencesManager,
+                        hapticHelper = hapticHelper,
+                        onBack = navigateBack
+                    )
+                }
+            }
 
-        composable(SettingsRoutes.CONTENT) {
-            SettingsContentScreen(
-                settings = settingsState.value,
-                preferencesManager = preferencesManager,
-                hapticHelper = hapticHelper,
-                onBack = navigateBack
-            )
-        }
+            composable(SettingsRoutes.CONTENT) {
+                CompositionLocalProvider(LocalSettingsTransitionScope provides this@composable) {
+                    SettingsContentScreen(
+                        settings = settingsState.value,
+                        preferencesManager = preferencesManager,
+                        hapticHelper = hapticHelper,
+                        onBack = navigateBack
+                    )
+                }
+            }
 
-        composable(SettingsRoutes.STORAGE) {
-            SettingsStorageScreen(
-                settings = settingsState.value,
-                preferencesManager = preferencesManager,
-                hapticHelper = hapticHelper,
-                onClearCacheNow = clearCacheNowState.value,
-                onBack = navigateBack
-            )
-        }
+            composable(SettingsRoutes.STORAGE) {
+                CompositionLocalProvider(LocalSettingsTransitionScope provides this@composable) {
+                    SettingsStorageScreen(
+                        settings = settingsState.value,
+                        preferencesManager = preferencesManager,
+                        hapticHelper = hapticHelper,
+                        onClearCacheNow = clearCacheNowState.value,
+                        onBack = navigateBack
+                    )
+                }
+            }
 
-        composable(SettingsRoutes.BACKUP) {
-            SettingsBackupScreen(
-                settings = settingsState.value,
-                preferencesManager = preferencesManager,
-                backupManager = backupManager,
-                hapticHelper = hapticHelper,
-                onBack = navigateBack
-            )
-        }
+            composable(SettingsRoutes.BACKUP) {
+                CompositionLocalProvider(LocalSettingsTransitionScope provides this@composable) {
+                    SettingsBackupScreen(
+                        settings = settingsState.value,
+                        preferencesManager = preferencesManager,
+                        backupManager = backupManager,
+                        hapticHelper = hapticHelper,
+                        onBack = navigateBack
+                    )
+                }
+            }
 
-        composable(SettingsRoutes.ABOUT) {
-            SettingsAboutScreen(
-                settings = settingsState.value,
-                hapticHelper = hapticHelper,
-                appUpdateRepository = appUpdateRepository,
-                onClearHistory = clearHistoryState.value,
-                onClearDownloads = clearDownloadsState.value,
-                onBack = navigateBack
-            )
+            composable(SettingsRoutes.ABOUT) {
+                CompositionLocalProvider(LocalSettingsTransitionScope provides this@composable) {
+                    SettingsAboutScreen(
+                        settings = settingsState.value,
+                        hapticHelper = hapticHelper,
+                        appUpdateRepository = appUpdateRepository,
+                        onClearHistory = clearHistoryState.value,
+                        onClearDownloads = clearDownloadsState.value,
+                        onBack = navigateBack
+                    )
+                }
+            }
         }
     }
 }
@@ -209,6 +228,7 @@ private fun SettingsMainScreen(
             title = stringResource(R.string.settings_appearance),
             subtitle = "动态取色、自定义主题配色、深色模式与液态玻璃",
             testTag = "settings_appearance_card",
+            sharedRouteKey = SettingsRoutes.APPEARANCE,
             onClick = { onNavigate(SettingsRoutes.APPEARANCE) }
         )
 
@@ -219,6 +239,7 @@ private fun SettingsMainScreen(
             title = "内容与浏览",
             subtitle = "WallHaven API Key、多标签筛选模式与标签中文本地化",
             testTag = "settings_content_card",
+            sharedRouteKey = SettingsRoutes.CONTENT,
             onClick = { onNavigate(SettingsRoutes.CONTENT) }
         )
 
@@ -229,6 +250,7 @@ private fun SettingsMainScreen(
             title = stringResource(R.string.settings_storage),
             subtitle = "本地缓存深度清理、自动清理策略、保存目录与并发下载",
             testTag = "settings_storage_card",
+            sharedRouteKey = SettingsRoutes.STORAGE,
             onClick = { onNavigate(SettingsRoutes.STORAGE) }
         )
 
@@ -239,6 +261,7 @@ private fun SettingsMainScreen(
             title = "备份与恢复",
             subtitle = "WebDAV 云端远程同步、定时每日备份与本地 JSON 导入导出",
             testTag = "settings_backup_card",
+            sharedRouteKey = SettingsRoutes.BACKUP,
             onClick = { onNavigate(SettingsRoutes.BACKUP) }
         )
 
@@ -249,6 +272,7 @@ private fun SettingsMainScreen(
             title = stringResource(R.string.settings_about),
             subtitle = "版本 ${BuildConfig.VERSION_NAME} (Build ${BuildConfig.VERSION_CODE})、更新检查、调试日志导出与记录清空",
             testTag = "settings_about_card",
+            sharedRouteKey = SettingsRoutes.ABOUT,
             onClick = { onNavigate(SettingsRoutes.ABOUT) }
         )
     }

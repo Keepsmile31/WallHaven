@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -85,6 +87,11 @@ import com.example.data.model.WallpaperDto
 import com.example.ui.components.AppHeaderBar
 import com.example.ui.components.ExploreLiquidGlassCircleButton
 import com.example.ui.components.ExploreLiquidGlassTabs
+import com.example.ui.components.LocalDetailTransitionScope
+import com.example.ui.components.WallpaperSharedElementKey
+import com.example.ui.components.WallpaperSharedElementPart
+import com.example.ui.components.wallhavenSharedBounds
+import com.example.ui.components.wallhavenSharedElement
 import com.example.util.CacheManager
 import com.example.util.HapticHelper
 import kotlinx.coroutines.launch
@@ -653,7 +660,7 @@ fun HistoryScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun HistoryCard(
     id: String,
@@ -668,6 +675,7 @@ private fun HistoryCard(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val detailAnimatedScope = LocalDetailTransitionScope.current
     val imageRequest = remember(thumbUrl) {
         ImageRequest.Builder(context)
             .data(thumbUrl)
@@ -700,6 +708,16 @@ private fun HistoryCard(
         border = borderStroke,
         modifier = Modifier
             .fillMaxWidth()
+            .wallhavenSharedBounds(
+                key = WallpaperSharedElementKey(
+                    wallpaperId = id,
+                    origin = "history",
+                    part = WallpaperSharedElementPart.Container
+                ),
+                animatedVisibilityScope = detailAnimatedScope,
+                clipShape = RoundedCornerShape(14.dp),
+                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+            )
             .clip(RoundedCornerShape(14.dp))
             .combinedClickable(
                 onClick = onClick,
@@ -718,6 +736,15 @@ private fun HistoryCard(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
+                    .wallhavenSharedElement(
+                        key = WallpaperSharedElementKey(
+                            wallpaperId = id,
+                            origin = "history",
+                            part = WallpaperSharedElementPart.Image
+                        ),
+                        animatedVisibilityScope = detailAnimatedScope,
+                        clipShape = RoundedCornerShape(10.dp)
+                    )
                     .size(68.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(baseCardColor)
@@ -771,7 +798,7 @@ private fun HistoryCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun DownloadHistoryCard(
     item: DownloadEntity,
@@ -784,6 +811,7 @@ private fun DownloadHistoryCard(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
+    val detailAnimatedScope = LocalDetailTransitionScope.current
     val imageRequest = remember(item.thumbUrl) {
         ImageRequest.Builder(context)
             .data(item.thumbUrl)
@@ -816,6 +844,16 @@ private fun DownloadHistoryCard(
         border = borderStroke,
         modifier = Modifier
             .fillMaxWidth()
+            .wallhavenSharedBounds(
+                key = WallpaperSharedElementKey(
+                    wallpaperId = item.id,
+                    origin = "history",
+                    part = WallpaperSharedElementPart.Container
+                ),
+                animatedVisibilityScope = detailAnimatedScope,
+                clipShape = RoundedCornerShape(14.dp),
+                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+            )
             .clip(RoundedCornerShape(14.dp))
             .combinedClickable(
                 onClick = onClick,
@@ -834,6 +872,15 @@ private fun DownloadHistoryCard(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
+                    .wallhavenSharedElement(
+                        key = WallpaperSharedElementKey(
+                            wallpaperId = item.id,
+                            origin = "history",
+                            part = WallpaperSharedElementPart.Image
+                        ),
+                        animatedVisibilityScope = detailAnimatedScope,
+                        clipShape = RoundedCornerShape(10.dp)
+                    )
                     .size(68.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(baseCardColor)

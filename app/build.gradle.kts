@@ -12,8 +12,8 @@ android {
     applicationId = "com.aistudio.wallhaven"
     minSdk = 34
     targetSdk = 37
-    versionCode = 27
-    versionName = "2.6.3"
+    versionCode = 28
+    versionName = "2.6.4"
 
     ndk {
       abiFilters.clear()

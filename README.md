@@ -7,7 +7,7 @@
 **基于 Kotlin 与 Jetpack Compose 构建的第三方 WallHaven.cc 原图高清壁纸客户端**
 
 [![Release](https://img.shields.io/github/v/release/Keepsmile31/WallHaven?style=flat-square&logo=github&color=FF6B35&label=Release)](https://github.com/Keepsmile31/WallHaven/releases/latest)
-[![Version](https://img.shields.io/badge/Version-v2.6.3%20(27)-2E7D32?style=flat-square&logo=android&logoColor=white)](https://github.com/Keepsmile31/WallHaven/releases)
+[![Version](https://img.shields.io/badge/Version-v2.6.4%20(28)-2E7D32?style=flat-square&logo=android&logoColor=white)](https://github.com/Keepsmile31/WallHaven/releases)
 [![Android](https://img.shields.io/badge/Android-14%2B%20(API%2034%2B)-3DDC84?style=flat-square&logo=android&logoColor=white)](https://developer.android.com)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white)](https://developer.android.com/compose)

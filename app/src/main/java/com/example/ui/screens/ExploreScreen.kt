@@ -209,7 +209,8 @@ fun ExploreScreen(
                     isFavorite = favoriteIds.contains(wp.id),
                     onFavoriteToggle = onFavoriteToggle,
                     onClick = onWallpaperClick,
-                    showFavoritesCount = showFavoritesCount
+                    showFavoritesCount = showFavoritesCount,
+                    sharedOrigin = "explore"
                 )
             }
 

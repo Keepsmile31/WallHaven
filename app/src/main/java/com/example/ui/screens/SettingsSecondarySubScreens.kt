@@ -150,7 +150,11 @@ internal fun SettingsBackupScreen(
 
     SubPageScaffold(
         title = "备份与恢复",
-        onBack = onBack
+        onBack = onBack,
+        sharedRouteKey = SettingsRoutes.BACKUP,
+        icon = ImageVector.vectorResource(R.drawable.ic_cloud_sync),
+        iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        iconTint = MaterialTheme.colorScheme.primary
     ) {
         M3SettingsSectionTitle(title = "WebDAV 云端同步", icon = ImageVector.vectorResource(R.drawable.ic_cloud_sync))
         M3SettingsCard {
@@ -561,7 +565,11 @@ internal fun SettingsAboutScreen(
 
     SubPageScaffold(
         title = stringResource(R.string.settings_about),
-        onBack = onBack
+        onBack = onBack,
+        sharedRouteKey = SettingsRoutes.ABOUT,
+        icon = ImageVector.vectorResource(R.drawable.ic_info),
+        iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+        iconTint = MaterialTheme.colorScheme.secondary
     ) {
         M3SettingsCard {
             Column(

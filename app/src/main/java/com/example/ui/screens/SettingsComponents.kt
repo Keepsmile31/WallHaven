@@ -1,6 +1,8 @@
 package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,17 +51,31 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
 import com.example.R
+import com.example.ui.components.LocalSettingsTransitionScope
+import com.example.ui.components.SettingsSharedElementKey
+import com.example.ui.components.SettingsSharedElementPart
+import com.example.ui.components.wallhavenAnimateEnterExit
+import com.example.ui.components.wallhavenSharedBounds
+import com.example.ui.components.wallhavenSharedElement
+import com.example.ui.components.wallhavenSkipToLookaheadSize
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun SubPageScaffold(
     title: String,
     onBack: () -> Unit,
+    sharedRouteKey: String? = null,
+    icon: ImageVector? = null,
+    iconContainerColor: Color? = null,
+    iconTint: Color? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     BackHandler { onBack() }
 
+    val settingsAnimatedScope = LocalSettingsTransitionScope.current
     var isInteractionReady by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(350)
@@ -71,9 +87,22 @@ internal fun SubPageScaffold(
     val topInset = maxOf(statusBarPadding, cutoutPadding)
     val navBottomInset = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
+    val sharedContainerModifier = if (sharedRouteKey != null) {
+        Modifier.wallhavenSharedBounds(
+            key = SettingsSharedElementKey(sharedRouteKey, SettingsSharedElementPart.Container),
+            animatedVisibilityScope = settingsAnimatedScope,
+            clipShape = RoundedCornerShape(20.dp),
+            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+        )
+    } else {
+        Modifier
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .then(sharedContainerModifier)
+            .background(MaterialTheme.colorScheme.background)
             .pointerInput(isInteractionReady) {
                 if (!isInteractionReady) {
                     awaitPointerEventScope {
@@ -115,20 +144,67 @@ internal fun SubPageScaffold(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Spacer(modifier = Modifier.width(4.dp))
+                if (icon != null && iconContainerColor != null && iconTint != null) {
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Box(
+                        modifier = Modifier
+                            .then(
+                                if (sharedRouteKey != null) {
+                                    Modifier.wallhavenSharedElement(
+                                        key = SettingsSharedElementKey(sharedRouteKey, SettingsSharedElementPart.Icon),
+                                        animatedVisibilityScope = settingsAnimatedScope,
+                                        clipShape = RoundedCornerShape(11.dp)
+                                    )
+                                } else {
+                                    Modifier
+                                }
+                            )
+                            .size(34.dp)
+                            .clip(RoundedCornerShape(11.dp))
+                            .background(iconContainerColor),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconTint,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                } else {
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
                 Text(
                     text = title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = if (sharedRouteKey != null) {
+                        Modifier.wallhavenSharedBounds(
+                            key = SettingsSharedElementKey(sharedRouteKey, SettingsSharedElementPart.Title),
+                            animatedVisibilityScope = settingsAnimatedScope,
+                            resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(ContentScale.Fit, Alignment.CenterStart)
+                        )
+                    } else {
+                        Modifier
+                    }
                 )
             }
 
-            content()
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wallhavenSkipToLookaheadSize()
+                    .wallhavenAnimateEnterExit(settingsAnimatedScope),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                content = content
+            )
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun M3ModuleCard(
     icon: ImageVector,
@@ -137,8 +213,21 @@ internal fun M3ModuleCard(
     title: String,
     subtitle: String,
     testTag: String,
+    sharedRouteKey: String? = null,
     onClick: () -> Unit
 ) {
+    val settingsAnimatedScope = LocalSettingsTransitionScope.current
+    val cardSharedModifier = if (sharedRouteKey != null) {
+        Modifier.wallhavenSharedBounds(
+            key = SettingsSharedElementKey(sharedRouteKey, SettingsSharedElementPart.Container),
+            animatedVisibilityScope = settingsAnimatedScope,
+            clipShape = RoundedCornerShape(20.dp),
+            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+        )
+    } else {
+        Modifier
+    }
+
     Card(
         onClick = onClick,
         shape = RoundedCornerShape(20.dp),
@@ -148,6 +237,7 @@ internal fun M3ModuleCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .then(cardSharedModifier)
             .testTag(testTag)
     ) {
         Row(
@@ -158,6 +248,17 @@ internal fun M3ModuleCard(
         ) {
             Box(
                 modifier = Modifier
+                    .then(
+                        if (sharedRouteKey != null) {
+                            Modifier.wallhavenSharedElement(
+                                key = SettingsSharedElementKey(sharedRouteKey, SettingsSharedElementPart.Icon),
+                                animatedVisibilityScope = settingsAnimatedScope,
+                                clipShape = RoundedCornerShape(14.dp)
+                            )
+                        } else {
+                            Modifier
+                        }
+                    )
                     .size(46.dp)
                     .clip(RoundedCornerShape(14.dp))
                     .background(iconContainerColor),
@@ -178,7 +279,16 @@ internal fun M3ModuleCard(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = if (sharedRouteKey != null) {
+                        Modifier.wallhavenSharedBounds(
+                            key = SettingsSharedElementKey(sharedRouteKey, SettingsSharedElementPart.Title),
+                            animatedVisibilityScope = settingsAnimatedScope,
+                            resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(ContentScale.Fit, Alignment.CenterStart)
+                        )
+                    } else {
+                        Modifier
+                    }
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(

@@ -9,14 +9,22 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentDialog
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.rememberTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,6 +68,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCompositionContext
@@ -71,10 +80,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -114,7 +126,7 @@ private fun parseWallhavenHexColor(hex: String): Color? {
     } else null
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun WallpaperDetailSheet(
     wallpaper: WallpaperDto?,
@@ -131,7 +143,8 @@ fun WallpaperDetailSheet(
     tagTranslations: Map<String, String> = emptyMap(),
     isTagLocalizationEnabled: Boolean = false,
     initialScrollOffset: Int = 0,
-    onScrollRestored: () -> Unit = {}
+    onScrollRestored: () -> Unit = {},
+    sharedOrigin: String? = null
 ) {
     if (wallpaper == null) return
 
@@ -189,7 +202,6 @@ fun WallpaperDetailSheet(
             .build()
     }
 
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val detailScrollState = rememberScrollState(initial = initialScrollOffset.coerceAtLeast(0))
 
     LaunchedEffect(wallpaper.id, initialScrollOffset) {
@@ -205,13 +217,12 @@ fun WallpaperDetailSheet(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        dragHandle = null,
-        containerColor = MaterialTheme.colorScheme.surface,
-        modifier = Modifier.fillMaxHeight()
-    ) {
+    val sharedScope = LocalSharedTransitionScope.current
+    val detailAnimatedScope = LocalDetailTransitionScope.current
+    val useInWindowSharedTransition =
+        sharedScope != null && detailAnimatedScope != null && sharedOrigin != null
+
+    val renderDetailBody: @Composable (Modifier) -> Unit = { handleExtraModifier ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -219,11 +230,12 @@ fun WallpaperDetailSheet(
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            // Subtle drag indicator affordance
+            // Subtle drag indicator affordance (supports swipe-down dismiss in shared-element view)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp, bottom = 4.dp),
+                    .then(handleExtraModifier)
+                    .padding(top = 10.dp, bottom = 6.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -242,6 +254,8 @@ fun WallpaperDetailSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .wallhavenSkipToLookaheadSize()
+                    .wallhavenAnimateEnterExit(detailAnimatedScope)
                     .padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 8.dp)
             ) {
                 Text(
@@ -310,6 +324,20 @@ fun WallpaperDetailSheet(
                 wallpaper.colors.firstOrNull()?.let { parseWallhavenHexColor(it) }
             } ?: fallbackColor
 
+            val previewImageSharedModifier = if (useInWindowSharedTransition && sharedOrigin != null) {
+                Modifier.wallhavenSharedElement(
+                    key = WallpaperSharedElementKey(
+                        wallpaperId = wallpaper.id,
+                        origin = sharedOrigin,
+                        part = WallpaperSharedElementPart.Image
+                    ),
+                    animatedVisibilityScope = detailAnimatedScope,
+                    clipShape = RoundedCornerShape(16.dp)
+                )
+            } else {
+                Modifier
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -329,6 +357,7 @@ fun WallpaperDetailSheet(
                     onSuccess = { isPreviewLoading = false },
                     onError = { isPreviewLoading = false },
                     modifier = Modifier
+                        .then(previewImageSharedModifier)
                         .fillMaxWidth()
                         .aspectRatio(parsedRatio.coerceIn(0.35f, 2.4f))
                 )
@@ -349,6 +378,7 @@ fun WallpaperDetailSheet(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(8.dp)
+                        .wallhavenAnimateEnterExit(detailAnimatedScope)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -370,6 +400,12 @@ fun WallpaperDetailSheet(
                 }
             }
 
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wallhavenSkipToLookaheadSize()
+                    .wallhavenAnimateEnterExit(detailAnimatedScope)
+            ) {
             // Primary Action Buttons: Optimized Simplified Chinese layout for Download and Set as Wallpaper
             Row(
                 modifier = Modifier
@@ -628,6 +664,78 @@ fun WallpaperDetailSheet(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+
+    if (useInWindowSharedTransition && sharedOrigin != null) {
+        BackHandler(enabled = !showFullScreenPreview) {
+            onDismiss()
+        }
+
+        val dismissThresholdPx = with(LocalDensity.current) { 120.dp.toPx() }
+        var dragOffsetY by remember(wallpaper.id) { mutableFloatStateOf(0f) }
+        val animatedDragOffset by animateFloatAsState(
+            targetValue = dragOffsetY,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium
+            ),
+            label = "detail_drag_dismiss_offset"
+        )
+
+        val dragDismissModifier = Modifier.pointerInput(wallpaper.id) {
+            detectVerticalDragGestures(
+                onDragEnd = {
+                    if (dragOffsetY > dismissThresholdPx) {
+                        onDismiss()
+                    }
+                    dragOffsetY = 0f
+                },
+                onDragCancel = { dragOffsetY = 0f },
+                onVerticalDrag = { change, dragAmount ->
+                    if (dragAmount > 0f || dragOffsetY > 0f) {
+                        change.consume()
+                        dragOffsetY = (dragOffsetY + dragAmount).coerceAtLeast(0f)
+                    }
+                }
+            )
+        }
+
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(0.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .wallhavenSharedBounds(
+                    key = WallpaperSharedElementKey(
+                        wallpaperId = wallpaper.id,
+                        origin = sharedOrigin,
+                        part = WallpaperSharedElementPart.Container
+                    ),
+                    animatedVisibilityScope = detailAnimatedScope,
+                    clipShape = RoundedCornerShape(16.dp),
+                    resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
+                )
+                .graphicsLayer {
+                    translationY = animatedDragOffset
+                    val scale = (1f - (animatedDragOffset / 2400f)).coerceIn(0.92f, 1f)
+                    scaleX = scale
+                    scaleY = scale
+                }
+        ) {
+            renderDetailBody(dragDismissModifier)
+        }
+    } else {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            sheetState = sheetState,
+            dragHandle = null,
+            containerColor = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.fillMaxHeight()
+        ) {
+            renderDetailBody(Modifier)
         }
     }
 
@@ -753,8 +861,14 @@ fun WallpaperDetailSheet(
             ) { visible -> if (visible) 1f else 0f }
             val imageScale by transition.animateFloat(
                 transitionSpec = {
-                    if (targetState) tween(240, easing = FastOutSlowInEasing)
-                    else tween(180, easing = FastOutSlowInEasing)
+                    if (targetState) {
+                        spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    } else {
+                        tween(180, easing = FastOutSlowInEasing)
+                    }
                 },
                 label = "fullscreen_image_scale"
             ) { visible -> if (visible) 1f else 0.92f }

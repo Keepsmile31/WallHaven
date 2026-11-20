@@ -17,11 +17,11 @@
 </p>
 
 <p>
-  <span><img src="docs/icons/features.svg" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#features">核心功能</a></span> &nbsp;&nbsp;
-  <span><img src="docs/icons/palette.svg" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#design">视觉设计</a></span> &nbsp;&nbsp;
-  <span><img src="docs/icons/download.svg" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#downloads">下载安装</a></span> &nbsp;&nbsp;
-  <span><img src="docs/icons/layers.svg" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#tech-stack">技术栈</a></span> &nbsp;&nbsp;
-  <span><img src="docs/icons/policy.svg" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#disclaimer">免责声明</a></span>
+  <span><img src="https://api.iconify.design/ic/baseline-auto-awesome.svg?color=%23FF6B35" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#features">核心功能</a></span> &nbsp;&nbsp;
+  <span><img src="https://api.iconify.design/ic/baseline-palette.svg?color=%238B5CF6" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#design">视觉设计</a></span> &nbsp;&nbsp;
+  <span><img src="https://api.iconify.design/ic/baseline-download.svg?color=%230EA5E9" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#downloads">下载安装</a></span> &nbsp;&nbsp;
+  <span><img src="https://api.iconify.design/ic/baseline-layers.svg?color=%2310B981" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#tech-stack">技术栈</a></span> &nbsp;&nbsp;
+  <span><img src="https://api.iconify.design/ic/baseline-policy.svg?color=%23F59E0B" width="18" height="18" align="absmiddle" alt="" />&nbsp;<a href="#disclaimer">免责声明</a></span>
 </p>
 
 </div>
@@ -32,7 +32,7 @@
 > **设计初衷**：基于 **Kotlin** 与 **Jetpack Compose（Material Design 3）** 从零构建，直连 [WallHaven.cc](https://wallhaven.cc) 开放 API，**不对任何壁纸进行压缩、裁切或画质劣化**，完整保留原图细节。
 
 <a id="features"></a>
-## <img src="docs/icons/features.svg" width="24" height="24" align="absmiddle" alt="" /> 核心功能
+## <img src="https://api.iconify.design/ic/baseline-auto-awesome.svg?color=%23FF6B35" width="24" height="24" align="absmiddle" alt="" /> 核心功能
 
 | 功能模块 | 特性说明 |
 | :--- | :--- |
@@ -44,7 +44,7 @@
 | **同步更新** | 支持本地 JSON 导入导出、**WebDAV 每日自动备份**，启动静默检测 GitHub 新版本；内置调试日志导出工具 |
 
 <a id="design"></a>
-## <img src="docs/icons/palette.svg" width="24" height="24" align="absmiddle" alt="" /> 视觉设计
+## <img src="https://api.iconify.design/ic/baseline-palette.svg?color=%238B5CF6" width="24" height="24" align="absmiddle" alt="" /> 视觉设计
 
 | 设计维度 | 特性说明 |
 | :--- | :--- |
@@ -53,19 +53,19 @@
 | **沉浸交互** | 全面适配 Edge-to-Edge 全面屏，支持滚动自动隐藏导航栏、触感震动反馈与定时自动清理缓存 |
 
 <a id="downloads"></a>
-## <img src="docs/icons/download.svg" width="24" height="24" align="absmiddle" alt="" /> 下载安装
+## <img src="https://api.iconify.design/ic/baseline-download.svg?color=%230EA5E9" width="24" height="24" align="absmiddle" alt="" /> 下载安装
 
 > [!IMPORTANT]
 > **运行环境**：Android 14+（API 34+） · `arm64-v8a` · 当前版本 `v2.6.3 (27)`
 
 | 下载渠道 | 获取地址与说明 |
 | :--- | :--- |
-| <img src="docs/icons/github.svg" width="20" height="20" align="absmiddle" alt="" /> **GitHub** | [前往下载最新版本](https://github.com/Keepsmile31/WallHaven/releases/latest) — 官方源码构建发布，推荐首选 |
-| <img src="docs/icons/123pan.svg" width="20" height="20" align="absmiddle" alt="" /> **123&nbsp;网盘** | [点击访问网盘](https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3) — 国内高速分流下载镜像 |
-| <img src="docs/icons/telegram.svg" width="20" height="20" align="absmiddle" alt="" /> **Telegram** | [加入 @WallHaven8](https://t.me/WallHaven8) — 版本更新推送与交流反馈 |
+| <img src="https://api.iconify.design/mdi/github.svg?color=%238B949E" width="20" height="20" align="absmiddle" alt="" /> **GitHub** | [前往下载最新版本](https://github.com/Keepsmile31/WallHaven/releases/latest) — 官方源码构建发布，推荐首选 |
+| <img src="https://cdn.jsdelivr.net/gh/Keepsmile31/WallHaven@main/docs/icons/123pan.svg" width="20" height="20" align="absmiddle" alt="" /> **123&nbsp;网盘** | [点击访问网盘](https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3) — 国内高速分流下载镜像 |
+| <img src="https://api.iconify.design/logos/telegram.svg" width="20" height="20" align="absmiddle" alt="" /> **Telegram** | [加入 @WallHaven8](https://t.me/WallHaven8) — 版本更新推送与交流反馈 |
 
 <details>
-<summary><img src="docs/icons/key.svg" width="18" height="18" align="absmiddle" alt="" /> <strong>API Key 与隐私说明（点击展开）</strong></summary>
+<summary><img src="https://api.iconify.design/ic/baseline-key.svg?color=%23F59E0B" width="18" height="18" align="absmiddle" alt="" /> <strong>API Key 与隐私说明（点击展开）</strong></summary>
 
 - **内容分级访问**：未填写个人 API Key 时可正常浏览 **一般（SFW）** 与 **粗糙（Sketchy）** 壁纸；在 **设置 → API Key** 填入密钥后，即可解锁 **限制级（NSFW）** 资源检索并提升请求限额。
 - **本地存储保障**：API Key 与 WebDAV 账号凭据仅保存于设备本地应用私有目录（`DataStore`）中，除向您配置的目标服务端发起必要请求外，不会上传至任何第三方服务器。
@@ -73,7 +73,7 @@
 </details>
 
 <a id="tech-stack"></a>
-## <img src="docs/icons/layers.svg" width="24" height="24" align="absmiddle" alt="" /> 技术栈
+## <img src="https://api.iconify.design/ic/baseline-layers.svg?color=%2310B981" width="24" height="24" align="absmiddle" alt="" /> 技术栈
 
 | 技术领域 | 核心选型 |
 | :--- | :--- |
@@ -82,7 +82,7 @@
 | **存储同步** | Room `2.7.0`（FTS4）· DataStore `1.1.7` · 自研 WebDAV 客户端 |
 
 <a id="disclaimer"></a>
-## <img src="docs/icons/policy.svg" width="24" height="24" align="absmiddle" alt="" /> 免责声明
+## <img src="https://api.iconify.design/ic/baseline-policy.svg?color=%23F59E0B" width="24" height="24" align="absmiddle" alt="" /> 免责声明
 
 1. **非官方客户端**：本应用为基于 [WallHaven.cc](https://wallhaven.cc) 开放 API 开发的第三方开源客户端，与 WallHaven 官方无任何从属或合作关系。
 2. **版权归属声明**：客户端未对壁纸图片做任何压缩或二次篡改，所有壁纸作品的版权及使用权限均归 **WallHaven.cc** 及原作者所有。
@@ -92,8 +92,8 @@
 
 <div align="center">
 
-<p>Built with <img src="docs/icons/favorite.svg" width="18" height="18" align="absmiddle" alt="love" /> in <strong>Kotlin</strong> &amp; <strong>Compose</strong></p>
+<p>Built with <img src="https://api.iconify.design/ic/baseline-favorite.svg?color=%23EC4899" width="18" height="18" align="absmiddle" alt="love" /> in <strong>Kotlin</strong> &amp; <strong>Compose</strong></p>
 
-<p>如果这个项目对你有帮助，欢迎点亮 <img src="docs/icons/star.svg" width="18" height="18" align="absmiddle" alt="Star" /> <strong>Star</strong></p>
+<p>如果这个项目对你有帮助，欢迎点亮 <img src="https://api.iconify.design/ic/baseline-star.svg?color=%23EAB308" width="18" height="18" align="absmiddle" alt="Star" /> <strong>Star</strong></p>
 
 </div>

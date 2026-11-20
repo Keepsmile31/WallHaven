@@ -2,8 +2,6 @@ package com.example.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -63,22 +61,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.layout.ContentScale
 import com.example.R
 import com.example.data.db.SearchHistoryEntity
-import com.example.ui.components.LocalSearchHistoryTransitionScope
-import com.example.ui.components.SearchHistorySharedElementKey
-import com.example.ui.components.SearchHistorySharedElementPart
-import com.example.ui.components.wallhavenAnimateEnterExit
-import com.example.ui.components.wallhavenSharedBounds
-import com.example.ui.components.wallhavenSharedElement
-import com.example.ui.components.wallhavenSkipToLookaheadSize
 import com.example.util.HapticHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SearchHistoryScreen(
     searchHistory: List<SearchHistoryEntity>,
@@ -192,17 +182,10 @@ fun SearchHistoryScreen(
     }
 
     val listBottomPadding = navBottomInset + if (isBatchMode) 168.dp else 88.dp
-    val searchHistoryScope = LocalSearchHistoryTransitionScope.current
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .wallhavenSharedBounds(
-                key = SearchHistorySharedElementKey(SearchHistorySharedElementPart.Container),
-                animatedVisibilityScope = searchHistoryScope,
-                clipShape = RoundedCornerShape(18.dp),
-                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
-            )
             .testTag("search_history_screen")
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -235,12 +218,7 @@ fun SearchHistoryScreen(
                         imageVector = ImageVector.vectorResource(R.drawable.ic_history),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .wallhavenSharedElement(
-                                key = SearchHistorySharedElementKey(SearchHistorySharedElementPart.Icon),
-                                animatedVisibilityScope = searchHistoryScope
-                            )
-                            .size(20.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -249,12 +227,7 @@ fun SearchHistoryScreen(
                             text = stringResource(R.string.search_history_manage_title),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.wallhavenSharedBounds(
-                                key = SearchHistorySharedElementKey(SearchHistorySharedElementPart.Title),
-                                animatedVisibilityScope = searchHistoryScope,
-                                resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(ContentScale.Fit, Alignment.CenterStart)
-                            )
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         if (searchHistory.isNotEmpty()) {
                             Text(
@@ -338,8 +311,6 @@ fun SearchHistoryScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier
                         .fillMaxSize()
-                        .wallhavenSkipToLookaheadSize()
-                        .wallhavenAnimateEnterExit(searchHistoryScope)
                         .testTag("all_search_history_list")
                 ) {
                     items(

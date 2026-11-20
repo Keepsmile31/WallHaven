@@ -182,8 +182,7 @@ fun FavoritesScreen(
                         isSelected = selectedIds.contains(dto.id),
                         onSelectToggle = toggleSelection,
                         onFavoriteToggle = onFavoriteToggle,
-                        onClick = onWallpaperClick,
-                        sharedOrigin = "favorites"
+                        onClick = onWallpaperClick
                     )
                 }
             }

@@ -151,7 +151,6 @@ internal fun SettingsBackupScreen(
     SubPageScaffold(
         title = "备份与恢复",
         onBack = onBack,
-        sharedRouteKey = SettingsRoutes.BACKUP,
         icon = ImageVector.vectorResource(R.drawable.ic_cloud_sync),
         iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
         iconTint = MaterialTheme.colorScheme.primary
@@ -566,7 +565,6 @@ internal fun SettingsAboutScreen(
     SubPageScaffold(
         title = stringResource(R.string.settings_about),
         onBack = onBack,
-        sharedRouteKey = SettingsRoutes.ABOUT,
         icon = ImageVector.vectorResource(R.drawable.ic_info),
         iconContainerColor = MaterialTheme.colorScheme.surfaceVariant,
         iconTint = MaterialTheme.colorScheme.secondary

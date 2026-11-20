@@ -1,7 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -87,18 +85,12 @@ import com.example.R
 import com.example.data.db.SearchHistoryEntity
 import com.example.data.model.WallpaperDto
 import com.example.data.repository.TagSuggestion
-import androidx.compose.ui.layout.ContentScale
 import com.example.ui.components.ActiveFilterChip
 import com.example.ui.components.AppHeaderBar
 import com.example.ui.components.FilterBottomSheet
 import com.example.ui.components.FilterState
-import com.example.ui.components.LocalSearchHistoryTransitionScope
 import com.example.ui.components.RestrictedApiKeyDialog
-import com.example.ui.components.SearchHistorySharedElementKey
-import com.example.ui.components.SearchHistorySharedElementPart
 import com.example.ui.components.WallpaperCard
-import com.example.ui.components.wallhavenSharedBounds
-import com.example.ui.components.wallhavenSharedElement
 import com.example.util.HapticHelper
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -273,8 +265,7 @@ fun SearchScreen(
                     isFavorite = favoriteIds.contains(wp.id),
                     onFavoriteToggle = onFavoriteToggle,
                     onClick = onWallpaperClick,
-                    showFavoritesCount = showFavoritesCount,
-                    sharedOrigin = "search"
+                    showFavoritesCount = showFavoritesCount
                 )
             }
 
@@ -708,7 +699,7 @@ fun SearchScreen(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InlineSearchHistorySection(
     recentHistory: List<SearchHistoryEntity>,
@@ -716,16 +707,9 @@ private fun InlineSearchHistorySection(
     onDeleteHistory: (String) -> Unit,
     onOpenAll: () -> Unit
 ) {
-    val searchHistoryScope = LocalSearchHistoryTransitionScope.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .wallhavenSharedBounds(
-                key = SearchHistorySharedElementKey(SearchHistorySharedElementPart.Container),
-                animatedVisibilityScope = searchHistoryScope,
-                clipShape = RoundedCornerShape(18.dp),
-                resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
-            )
             .padding(horizontal = 8.dp, vertical = 10.dp)
             .testTag("search_history_inline_section"),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -738,23 +722,13 @@ private fun InlineSearchHistorySection(
                 imageVector = ImageVector.vectorResource(R.drawable.ic_history),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .wallhavenSharedElement(
-                        key = SearchHistorySharedElementKey(SearchHistorySharedElementPart.Icon),
-                        animatedVisibilityScope = searchHistoryScope
-                    )
-                    .size(16.dp)
+                modifier = Modifier.size(16.dp)
             )
             Text(
                 text = stringResource(R.string.search_history_title),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.wallhavenSharedBounds(
-                    key = SearchHistorySharedElementKey(SearchHistorySharedElementPart.Title),
-                    animatedVisibilityScope = searchHistoryScope,
-                    resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(ContentScale.Fit, Alignment.CenterStart)
-                )
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 

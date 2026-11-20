@@ -1,7 +1,5 @@
 package com.example.ui.components
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -44,7 +42,6 @@ import coil.request.ImageRequest
 import com.example.R
 import com.example.data.model.WallpaperDto
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WallpaperCard(
     wallpaper: WallpaperDto,
@@ -55,8 +52,7 @@ fun WallpaperCard(
     isSelectable: Boolean = false,
     isSelected: Boolean = false,
     onSelectToggle: ((String) -> Unit)? = null,
-    showFavoritesCount: Boolean = true,
-    sharedOrigin: String? = null
+    showFavoritesCount: Boolean = true
 ) {
     val context = LocalContext.current
 
@@ -116,42 +112,12 @@ fun WallpaperCard(
             .build()
     }
 
-    val detailAnimatedScope = LocalDetailTransitionScope.current
-    val cardSharedModifier = if (sharedOrigin != null) {
-        Modifier.wallhavenSharedBounds(
-            key = WallpaperSharedElementKey(
-                wallpaperId = wallpaper.id,
-                origin = sharedOrigin,
-                part = WallpaperSharedElementPart.Container
-            ),
-            animatedVisibilityScope = detailAnimatedScope,
-            clipShape = RoundedCornerShape(12.dp),
-            resizeMode = SharedTransitionScope.ResizeMode.RemeasureToBounds
-        )
-    } else {
-        Modifier
-    }
-    val imageSharedModifier = if (sharedOrigin != null) {
-        Modifier.wallhavenSharedElement(
-            key = WallpaperSharedElementKey(
-                wallpaperId = wallpaper.id,
-                origin = sharedOrigin,
-                part = WallpaperSharedElementPart.Image
-            ),
-            animatedVisibilityScope = detailAnimatedScope,
-            clipShape = RoundedCornerShape(12.dp)
-        )
-    } else {
-        Modifier
-    }
-
     Card(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = dominantColor.copy(alpha = 0.25f)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
             .fillMaxWidth()
-            .then(cardSharedModifier)
             .clip(RoundedCornerShape(12.dp))
             .clickable {
                 if (isSelectable && onSelectToggle != null) {
@@ -179,7 +145,6 @@ fun WallpaperCard(
                     }
                 },
                 modifier = Modifier
-                    .then(imageSharedModifier)
                     .fillMaxSize()
                     .align(Alignment.Center)
             )

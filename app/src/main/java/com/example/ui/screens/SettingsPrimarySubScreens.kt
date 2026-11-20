@@ -125,7 +125,6 @@ internal fun SettingsAppearanceScreen(
     SubPageScaffold(
         title = stringResource(R.string.settings_appearance),
         onBack = onBack,
-        sharedRouteKey = SettingsRoutes.APPEARANCE,
         icon = ImageVector.vectorResource(R.drawable.ic_palette),
         iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
         iconTint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -572,7 +571,6 @@ internal fun SettingsContentScreen(
     SubPageScaffold(
         title = "内容与浏览",
         onBack = onBack,
-        sharedRouteKey = SettingsRoutes.CONTENT,
         icon = ImageVector.vectorResource(R.drawable.ic_tune),
         iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
         iconTint = MaterialTheme.colorScheme.onSecondaryContainer
@@ -928,7 +926,6 @@ internal fun SettingsStorageScreen(
     SubPageScaffold(
         title = stringResource(R.string.settings_storage),
         onBack = onBack,
-        sharedRouteKey = SettingsRoutes.STORAGE,
         icon = ImageVector.vectorResource(R.drawable.ic_storage),
         iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
         iconTint = MaterialTheme.colorScheme.onTertiaryContainer

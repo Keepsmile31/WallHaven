@@ -424,9 +424,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val newItems = response.data
                 if (reset) {
-                    _exploreWallpapers.value = newItems
+                    _exploreWallpapers.value = newItems.distinctBy { it.id }
                 } else {
-                    _exploreWallpapers.value = _exploreWallpapers.value + newItems
+                    _exploreWallpapers.value = (_exploreWallpapers.value + newItems).distinctBy { it.id }
                 }
 
                 val lastPage = response.meta?.lastPage ?: 1
@@ -717,9 +717,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val newItems = response.data
                 if (reset) {
-                    _searchResults.value = newItems
+                    _searchResults.value = newItems.distinctBy { it.id }
                 } else {
-                    _searchResults.value = _searchResults.value + newItems
+                    _searchResults.value = (_searchResults.value + newItems).distinctBy { it.id }
                 }
 
                 val lastPage = response.meta?.lastPage ?: 1

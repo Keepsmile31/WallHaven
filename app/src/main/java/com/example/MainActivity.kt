@@ -12,8 +12,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -77,10 +75,7 @@ import com.example.ui.MainViewModel
 import com.example.ui.components.AppUpdateDialog
 import com.example.ui.components.DisclaimerDialog
 import com.example.ui.components.FloatingCapsuleNavigationBar
-import com.example.ui.components.LocalDetailTransitionScope
 import com.example.ui.components.LocalLiquidGlassMode
-import com.example.ui.components.LocalSearchHistoryTransitionScope
-import com.example.ui.components.LocalSharedTransitionScope
 import com.example.ui.components.NavBarDestination
 import com.example.ui.components.SafeTextToolbarProvider
 import com.example.ui.components.WallpaperDetailSheet
@@ -100,7 +95,7 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -302,16 +297,6 @@ class MainActivity : ComponentActivity() {
                                         .forEach { activeWallpaperCache.remove(it) }
                                 }
                             }
-                            val detailSourceOrigin = remember(currentTab) {
-                                when (currentTab) {
-                                    0 -> "explore"
-                                    1 -> "search"
-                                    2 -> "favorites"
-                                    3 -> "history"
-                                    else -> "other"
-                                }
-                            }
-
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -323,20 +308,15 @@ class MainActivity : ComponentActivity() {
                                         drawLayer(backdropLayer)
                                     }
                             ) {
-                                SharedTransitionLayout(modifier = Modifier.fillMaxSize()) {
-                                    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
-                                        AnimatedContent(
-                                            targetState = selectedWallpaper?.id,
-                                            transitionSpec = {
-                                                fadeIn(tween(240, easing = FastOutSlowInEasing))
-                                                    .togetherWith(fadeOut(tween(180, easing = FastOutSlowInEasing)))
-                                            },
-                                            label = "wallpaper_detail_shared_transition"
-                                        ) { activeWallpaperId ->
-                                            CompositionLocalProvider(
-                                                LocalDetailTransitionScope provides this@AnimatedContent
-                                            ) {
-                                                if (activeWallpaperId == null) {
+                                AnimatedContent(
+                                    targetState = selectedWallpaper?.id,
+                                    transitionSpec = {
+                                        fadeIn(tween(240, easing = FastOutSlowInEasing))
+                                            .togetherWith(fadeOut(tween(180, easing = FastOutSlowInEasing)))
+                                    },
+                                    label = "wallpaper_detail_transition"
+                                ) { activeWallpaperId ->
+                                    if (activeWallpaperId == null) {
                                                     AnimatedContent(
                                                         targetState = currentTab,
                                                         transitionSpec = {
@@ -378,21 +358,17 @@ class MainActivity : ComponentActivity() {
                                                             }
                                                         }
                                                     }
-                                                } else {
-                                                    val wp = selectedWallpaper?.takeIf { it.id == activeWallpaperId }
-                                                        ?: activeWallpaperCache[activeWallpaperId]
-                                                    if (wp != null) {
-                                                        WallpaperDetailOverlay(
-                                                            wallpaper = wp,
-                                                            sharedOrigin = detailSourceOrigin,
-                                                            viewModel = viewModel,
-                                                            isTagLocalizationEnabled = settings.tagLocalization,
-                                                            searchGridState = searchGridState,
-                                                            coroutineScope = coroutineScope
-                                                        )
-                                                    }
-                                                }
-                                            }
+                                    } else {
+                                        val wp = selectedWallpaper?.takeIf { it.id == activeWallpaperId }
+                                            ?: activeWallpaperCache[activeWallpaperId]
+                                        if (wp != null) {
+                                            WallpaperDetailOverlay(
+                                                wallpaper = wp,
+                                                viewModel = viewModel,
+                                                isTagLocalizationEnabled = settings.tagLocalization,
+                                                searchGridState = searchGridState,
+                                                coroutineScope = coroutineScope
+                                            )
                                         }
                                     }
                                 }
@@ -481,55 +457,53 @@ private fun SearchTabContent(
         },
         label = "search_subpage_transition"
     ) { showingAllHistory ->
-        CompositionLocalProvider(LocalSearchHistoryTransitionScope provides this@AnimatedContent) {
-            if (showingAllHistory) {
-                SearchHistoryScreen(
-                    searchHistory = searchHistory,
-                    hapticHelper = viewModel.hapticHelper,
-                    onBack = { showAllSearchHistory = false },
-                    onSelectQuery = { query ->
-                        showAllSearchHistory = false
-                        viewModel.selectSearchHistory(query)
-                    },
-                    onDeleteQuery = viewModel::deleteSearchHistoryItem,
-                    onBatchDeleteQueries = viewModel::batchDeleteSearchHistory,
-                    onClearAll = viewModel::clearSearchHistory
-                )
-            } else {
-                SearchScreen(
-                    searchQuery = searchQuery,
-                    onQueryChange = viewModel::onSearchQueryChange,
-                    onClearSearch = viewModel::clearSearch,
-                    onPerformSearch = remember(viewModel) { { viewModel.performSearch(reset = true) } },
-                    wallpapers = searchResults,
-                    isLoading = isSearchLoading,
-                    isEndReached = isSearchEndReached,
-                    errorMessage = searchError,
-                    favoriteIds = favoriteIds,
-                    filterState = searchFilterState,
-                    selectedColor = selectedColor,
-                    hasApiKey = settings.apiKey.isNotBlank(),
-                    onApplyFilter = viewModel::applySearchFilter,
-                    onResetFilter = viewModel::resetSearchFilter,
-                    onRemoveSingleFilter = viewModel::removeSingleSearchFilter,
-                    onSelectColor = viewModel::setSearchColor,
-                    onLoadMore = remember(viewModel) { { viewModel.performSearch(reset = false) } },
-                    onWallpaperClick = viewModel::selectWallpaper,
-                    onFavoriteToggle = viewModel::toggleFavorite,
-                    onNavigateToSettings = remember(viewModel) { { viewModel.selectTab(4) } },
-                    hapticHelper = viewModel.hapticHelper,
-                    showFavoritesCount = settings.showFavoritesCount,
-                    suggestions = tagSuggestions,
-                    onSelectSuggestion = viewModel::selectTagSuggestion,
-                    onClearSuggestions = viewModel::clearTagSuggestions,
-                    searchHistory = searchHistory,
-                    onSelectSearchHistory = viewModel::selectSearchHistory,
-                    onDeleteSearchHistory = viewModel::deleteSearchHistoryItem,
-                    onOpenAllSearchHistory = { showAllSearchHistory = true },
-                    isTagLocalizationEnabled = settings.tagLocalization,
-                    gridState = gridState
-                )
-            }
+        if (showingAllHistory) {
+            SearchHistoryScreen(
+                searchHistory = searchHistory,
+                hapticHelper = viewModel.hapticHelper,
+                onBack = { showAllSearchHistory = false },
+                onSelectQuery = { query ->
+                    showAllSearchHistory = false
+                    viewModel.selectSearchHistory(query)
+                },
+                onDeleteQuery = viewModel::deleteSearchHistoryItem,
+                onBatchDeleteQueries = viewModel::batchDeleteSearchHistory,
+                onClearAll = viewModel::clearSearchHistory
+            )
+        } else {
+            SearchScreen(
+                searchQuery = searchQuery,
+                onQueryChange = viewModel::onSearchQueryChange,
+                onClearSearch = viewModel::clearSearch,
+                onPerformSearch = remember(viewModel) { { viewModel.performSearch(reset = true) } },
+                wallpapers = searchResults,
+                isLoading = isSearchLoading,
+                isEndReached = isSearchEndReached,
+                errorMessage = searchError,
+                favoriteIds = favoriteIds,
+                filterState = searchFilterState,
+                selectedColor = selectedColor,
+                hasApiKey = settings.apiKey.isNotBlank(),
+                onApplyFilter = viewModel::applySearchFilter,
+                onResetFilter = viewModel::resetSearchFilter,
+                onRemoveSingleFilter = viewModel::removeSingleSearchFilter,
+                onSelectColor = viewModel::setSearchColor,
+                onLoadMore = remember(viewModel) { { viewModel.performSearch(reset = false) } },
+                onWallpaperClick = viewModel::selectWallpaper,
+                onFavoriteToggle = viewModel::toggleFavorite,
+                onNavigateToSettings = remember(viewModel) { { viewModel.selectTab(4) } },
+                hapticHelper = viewModel.hapticHelper,
+                showFavoritesCount = settings.showFavoritesCount,
+                suggestions = tagSuggestions,
+                onSelectSuggestion = viewModel::selectTagSuggestion,
+                onClearSuggestions = viewModel::clearTagSuggestions,
+                searchHistory = searchHistory,
+                onSelectSearchHistory = viewModel::selectSearchHistory,
+                onDeleteSearchHistory = viewModel::deleteSearchHistoryItem,
+                onOpenAllSearchHistory = { showAllSearchHistory = true },
+                isTagLocalizationEnabled = settings.tagLocalization,
+                gridState = gridState
+            )
         }
     }
 }
@@ -601,7 +575,6 @@ private fun SettingsTabContent(
 @Composable
 private fun WallpaperDetailOverlay(
     wallpaper: WallpaperDto,
-    sharedOrigin: String,
     viewModel: MainViewModel,
     isTagLocalizationEnabled: Boolean,
     searchGridState: LazyStaggeredGridState,
@@ -648,8 +621,7 @@ private fun WallpaperDetailOverlay(
         tagTranslations = tagTranslations,
         isTagLocalizationEnabled = isTagLocalizationEnabled,
         initialScrollOffset = pendingDetailScrollOffset,
-        onScrollRestored = viewModel::consumePendingDetailScroll,
-        sharedOrigin = sharedOrigin
+        onScrollRestored = viewModel::consumePendingDetailScroll
     )
 }
 

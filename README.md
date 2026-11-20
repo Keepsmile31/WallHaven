@@ -61,7 +61,7 @@
 | 下载渠道 | 获取地址与说明 |
 | :--- | :--- |
 | <img src="https://api.iconify.design/mdi/github.svg?color=%238B949E" width="20" height="20" align="absmiddle" alt="" /> **GitHub** | [前往下载最新版本](https://github.com/Keepsmile31/WallHaven/releases/latest) — 官方源码构建发布，推荐首选 |
-| <img src="https://cdn.jsdelivr.net/gh/Keepsmile31/WallHaven@main/docs/icons/123pan.svg" width="20" height="20" align="absmiddle" alt="" /> **123&nbsp;网盘** | [点击访问网盘](https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3) — 国内高速分流下载镜像 |
+| <img src="https://img.shields.io/badge/%20-2E77FF?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0iI2ZmZiIgID48cGF0aCAgZD0iTTIgMTBIOFYzOEgyWk0xMSAxMEgyNVEyOSAxMCAyOSAxNFYyM1EyOSAyNyAyNSAyN0gxN1YzMkgyOVYzOEgxNVExMSAzOCAxMSAzNFYyNVExMSAyMSAxNSAyMUgyM1YxNkgxMVpNMzIgMTBINDJRNDYgMTAgNDYgMTRWMjFRNDYgMjMgNDMgMjRRNDYgMjUgNDYgMjdWMzRRNDYgMzggNDIgMzhIMzJWMzJINDBWMjdIMzRWMjFINDBWMTZIMzJaIiAvPjwvc3ZnPiAg" height="20" align="absmiddle" alt="" /> **123&nbsp;网盘** | [点击访问网盘](https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3) — 国内高速分流下载镜像 |
 | <img src="https://api.iconify.design/logos/telegram.svg" width="20" height="20" align="absmiddle" alt="" /> **Telegram** | [加入 @WallHaven8](https://t.me/WallHaven8) — 版本更新推送与交流反馈 |
 
 <details>

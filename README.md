@@ -8,12 +8,12 @@
 
 <p>
   <a href="https://github.com/Keepsmile31/WallHaven/releases/latest"><img src="https://img.shields.io/github/v/release/Keepsmile31/WallHaven?style=flat-square&logo=github&color=FF6B35&label=Release" alt="Release" /></a>
-  <a href="https://github.com/Keepsmile31/WallHaven/releases"><img src="https://img.shields.io/badge/Version-v2.6.3%20(27)-2E7D32?style=flat-square&logo=semanticrelease&logoColor=white" alt="Version" /></a>
-  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-14%2B%20(API%2034%2B)-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android 14+" /></a>
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" /></a>
-  <a href="https://developer.android.com/compose"><img src="https://img.shields.io/badge/Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose" /></a>
-  <a href="https://t.me/WallHaven8"><img src="https://img.shields.io/badge/Telegram-%40WallHaven8-26A5E4?style=flat-square&logo=telegram&logoColor=white" alt="Telegram" /></a>
-  <a href="https://github.com/Keepsmile31/WallHaven/stargazers"><img src="https://img.shields.io/github/stars/Keepsmile31/WallHaven?style=flat-square&color=EAB308&label=Stars" alt="Stars" /></a>
+  <a href="https://github.com/Keepsmile31/WallHaven/releases"><img src="https://img.shields.io/badge/Version-v2.6.3%20(27)-2E7D32?style=flat-square&logo=semanticrelease" alt="Version" /></a>
+  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Android-14%2B%20(API%2034%2B)-3DDC84?style=flat-square&logo=android" alt="Android 14+" /></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?style=flat-square&logo=kotlin" alt="Kotlin" /></a>
+  <a href="https://developer.android.com/compose"><img src="https://img.shields.io/badge/Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose" alt="Jetpack Compose" /></a>
+  <a href="https://t.me/WallHaven8"><img src="https://img.shields.io/badge/Telegram-%40WallHaven8-26A5E4?style=flat-square&logo=telegram" alt="Telegram" /></a>
+  <a href="https://github.com/Keepsmile31/WallHaven/stargazers"><img src="https://img.shields.io/github/stars/Keepsmile31/WallHaven?style=flat-square&logo=github&color=EAB308&label=Stars" alt="Stars" /></a>
 </p>
 
 <p>
@@ -61,7 +61,7 @@
 | 下载渠道 | 获取地址与说明 |
 | :--- | :--- |
 | <img src="docs/icons/github.svg" width="20" height="20" align="absmiddle" alt="" /> **GitHub** | [前往下载最新版本](https://github.com/Keepsmile31/WallHaven/releases/latest) — 官方源码构建发布，推荐首选 |
-| <img src="docs/icons/cloud-download.svg" width="20" height="20" align="absmiddle" alt="" /> **123&nbsp;网盘** | [点击访问网盘](https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3) — 国内高速分流下载镜像 |
+| <img src="docs/icons/123pan.svg" width="20" height="20" align="absmiddle" alt="" /> **123&nbsp;网盘** | [点击访问网盘](https://1815318986.share.123pan.cn/123pan/ngLtVv-8xfm3) — 国内高速分流下载镜像 |
 | <img src="docs/icons/telegram.svg" width="20" height="20" align="absmiddle" alt="" /> **Telegram** | [加入 @WallHaven8](https://t.me/WallHaven8) — 版本更新推送与交流反馈 |
 
 <details>

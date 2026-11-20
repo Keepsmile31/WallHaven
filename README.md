@@ -36,21 +36,21 @@
 
 | 功能模块 | 特性说明 |
 | :--- | :--- |
-| <img src="docs/icons/explore.svg" width="20" height="20" align="absmiddle" alt="" /> **发现探索** | 支持 **最新 / 热门 / 随机 / 榜单** 四大分栏切换；单击已选标签平滑回顶，双击「随机」即时刷新壁纸流 |
-| <img src="docs/icons/tune.svg" width="20" height="20" align="absmiddle" alt="" /> **精细筛选** | 支持风格题材、宽高比、分辨率门槛、主色调、排序、内容类别（常规 / 动漫 / 人物）与纯度分级（一般 / 粗糙 / 限制级），支持 **全局共享** 与 **分页独立** |
-| <img src="docs/icons/search.svg" width="20" height="20" align="absmiddle" alt="" /> **双语检索** | 内置 Room FTS4 全文检索与中英文标签词典，支持实时标签联想、色板按色寻图及详情页标签 / 色块下钻 |
-| <img src="docs/icons/image.svg" width="20" height="20" align="absmiddle" alt="" /> **高清看图** | 基于 `BitmapRegionDecoder` 实现多层级分块解码，支持 1080P 至 8K 原图无损缩放、双击放大与下拉退出 |
-| <img src="docs/icons/favorite.svg" width="20" height="20" align="absmiddle" alt="" /> **下载管理** | 支持多线程并发下载原图、一键设为 **桌面 / 锁屏 / 双屏** 壁纸，以及收藏与浏览 / 下载 / 搜索历史批量管理 |
-| <img src="docs/icons/cloud-sync.svg" width="20" height="20" align="absmiddle" alt="" /> **同步更新** | 支持本地 JSON 导入导出、**WebDAV 每日自动备份**，启动静默检测 GitHub 新版本；内置调试日志导出工具 |
+| **发现探索** | 支持 **最新 / 热门 / 随机 / 榜单** 四大分栏切换；单击已选标签平滑回顶，双击「随机」即时刷新壁纸流 |
+| **精细筛选** | 支持风格题材、宽高比、分辨率门槛、主色调、排序、内容类别（常规 / 动漫 / 人物）与纯度分级（一般 / 粗糙 / 限制级），支持 **全局共享** 与 **分页独立** |
+| **双语检索** | 内置 Room FTS4 全文检索与中英文标签词典，支持实时标签联想、色板按色寻图及详情页标签 / 色块下钻 |
+| **高清看图** | 基于 `BitmapRegionDecoder` 实现多层级分块解码，支持 1080P 至 8K 原图无损缩放、双击放大与下拉退出 |
+| **下载管理** | 支持多线程并发下载原图、一键设为 **桌面 / 锁屏 / 双屏** 壁纸，以及收藏与浏览 / 下载 / 搜索历史批量管理 |
+| **同步更新** | 支持本地 JSON 导入导出、**WebDAV 每日自动备份**，启动静默检测 GitHub 新版本；内置调试日志导出工具 |
 
 <a id="design"></a>
 ## <img src="docs/icons/palette.svg" width="24" height="24" align="absmiddle" alt="" /> 视觉设计
 
 | 设计维度 | 特性说明 |
 | :--- | :--- |
-| <img src="docs/icons/contrast.svg" width="20" height="20" align="absmiddle" alt="" /> **动态色彩** | 支持 **Material You 动态取色**，内置 **9 款主题色彩** 与 **4 种配色风格**（经典活力 / 鲜明大胆 / 柔和素雅 / 高对比度），支持跟随系统 / 浅色 / 深色与 **AMOLED 纯黑** |
-| <img src="docs/icons/water-drop.svg" width="20" height="20" align="absmiddle" alt="" /> **液态玻璃** | 基于 Android `RuntimeShader` 提供 **无 / 标准 / 极致** 三档 AGSL 折射质感，覆盖悬浮胶囊底栏、顶部分段标签与玻璃态开关 |
-| <img src="docs/icons/vibration.svg" width="20" height="20" align="absmiddle" alt="" /> **沉浸交互** | 全面适配 Edge-to-Edge 全面屏，支持滚动自动隐藏导航栏、触感震动反馈与定时自动清理缓存 |
+| **动态色彩** | 支持 **Material You 动态取色**，内置 **9 款主题色彩** 与 **4 种配色风格**（经典活力 / 鲜明大胆 / 柔和素雅 / 高对比度），支持跟随系统 / 浅色 / 深色与 **AMOLED 纯黑** |
+| **液态玻璃** | 基于 Android `RuntimeShader` 提供 **无 / 标准 / 极致** 三档 AGSL 折射质感，覆盖悬浮胶囊底栏、顶部分段标签与玻璃态开关 |
+| **沉浸交互** | 全面适配 Edge-to-Edge 全面屏，支持滚动自动隐藏导航栏、触感震动反馈与定时自动清理缓存 |
 
 <a id="downloads"></a>
 ## <img src="docs/icons/download.svg" width="24" height="24" align="absmiddle" alt="" /> 下载安装

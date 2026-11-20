@@ -34,14 +34,14 @@
 <a id="features"></a>
 ## <img src="docs/icons/features.svg" width="24" height="24" align="absmiddle" alt="" /> 核心功能
 
-| 功&#8288;能&#8288;模&#8288;块 | 特性说明 |
+| 功能模块 | 特性说明 |
 | :--- | :--- |
-| <img src="docs/icons/explore.svg" width="22" height="22" align="absmiddle" alt="" />&nbsp;&nbsp;**发&#8288;现&#8288;探&#8288;索** | 支持 **最新 / 热门 / 随机 / 榜单** 四大分栏切换；单击已选标签平滑回顶，双击「随机」即时刷新壁纸流 |
-| <img src="docs/icons/tune.svg" width="22" height="22" align="absmiddle" alt="" />&nbsp;&nbsp;**精&#8288;细&#8288;筛&#8288;选** | 支持风格题材、宽高比、分辨率门槛、主色调、排序、内容类别（常规 / 动漫 / 人物）与纯度分级（一般 / 粗糙 / 限制级），支持 **全局共享** 与 **分页独立** |
-| <img src="docs/icons/search.svg" width="22" height="22" align="absmiddle" alt="" />&nbsp;&nbsp;**双&#8288;语&#8288;检&#8288;索** | 内置 Room FTS4 全文检索与中英文标签词典，支持实时标签联想、色板按色寻图及详情页标签 / 色块下钻 |
-| <img src="docs/icons/image.svg" width="22" height="22" align="absmiddle" alt="" />&nbsp;&nbsp;**高&#8288;清&#8288;看&#8288;图** | 基于 `BitmapRegionDecoder` 实现多层级分块解码，支持 1080P 至 8K 原图无损缩放、双击放大与下拉退出 |
-| <img src="docs/icons/download-tray.svg" width="22" height="22" align="absmiddle" alt="" />&nbsp;&nbsp;**下&#8288;载&#8288;管&#8288;理** | 支持多线程并发下载原图、一键设为 **桌面 / 锁屏 / 双屏** 壁纸，以及收藏与浏览 / 下载 / 搜索历史批量管理 |
-| <img src="docs/icons/cloud-sync.svg" width="22" height="22" align="absmiddle" alt="" />&nbsp;&nbsp;**同&#8288;步&#8288;更&#8288;新** | 支持本地 JSON 导入导出、**WebDAV 每日自动备份**，启动静默检测 GitHub 新版本；内置调试日志导出工具 |
+| <img src="docs/icons/explore.svg" width="20" height="20" align="absmiddle" alt="" /> **发现探索** | 支持 **最新 / 热门 / 随机 / 榜单** 四大分栏切换；单击已选标签平滑回顶，双击「随机」即时刷新壁纸流 |
+| <img src="docs/icons/tune.svg" width="20" height="20" align="absmiddle" alt="" /> **精细筛选** | 支持风格题材、宽高比、分辨率门槛、主色调、排序、内容类别（常规 / 动漫 / 人物）与纯度分级（一般 / 粗糙 / 限制级），支持 **全局共享** 与 **分页独立** |
+| <img src="docs/icons/search.svg" width="20" height="20" align="absmiddle" alt="" /> **双语检索** | 内置 Room FTS4 全文检索与中英文标签词典，支持实时标签联想、色板按色寻图及详情页标签 / 色块下钻 |
+| <img src="docs/icons/image.svg" width="20" height="20" align="absmiddle" alt="" /> **高清看图** | 基于 `BitmapRegionDecoder` 实现多层级分块解码，支持 1080P 至 8K 原图无损缩放、双击放大与下拉退出 |
+| <img src="docs/icons/favorite.svg" width="20" height="20" align="absmiddle" alt="" /> **下载管理** | 支持多线程并发下载原图、一键设为 **桌面 / 锁屏 / 双屏** 壁纸，以及收藏与浏览 / 下载 / 搜索历史批量管理 |
+| <img src="docs/icons/cloud-sync.svg" width="20" height="20" align="absmiddle" alt="" /> **同步更新** | 支持本地 JSON 导入导出、**WebDAV 每日自动备份**，启动静默检测 GitHub 新版本；内置调试日志导出工具 |
 
 <a id="design"></a>
 ## <img src="docs/icons/palette.svg" width="24" height="24" align="absmiddle" alt="" /> 视觉设计
